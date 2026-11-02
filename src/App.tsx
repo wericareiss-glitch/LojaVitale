@@ -8,7 +8,6 @@ import { FaqSection } from './components/FaqSection';
 import { Footer } from './components/Footer';
 import { ProcedureModal } from './components/ProcedureModal';
 import { CheckoutDrawer } from './components/CheckoutDrawer';
-import { OrdersDrawer } from './components/OrdersDrawer';
 import { MercadoPagoModal } from './components/MercadoPagoModal';
 import { AdminPanel } from './components/AdminPanel';
 import { ToastContainer, ToastMessage } from './components/Toast';
@@ -36,10 +35,8 @@ export default function App() {
 
   const [selectedProcedure, setSelectedProcedure] = useState<Procedure | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [isMpModalOpen, setIsMpModalOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Toast dispatcher
@@ -93,13 +90,7 @@ export default function App() {
 
   useEffect(() => {
     fetchConfig();
-    fetchOrders();
     fetchProcedures();
-
-    const interval = setInterval(() => {
-      fetchOrders();
-    }, 6000);
-    return () => clearInterval(interval);
   }, []);
 
   // Dynamic SEO meta tags update based on user navigation
@@ -213,12 +204,6 @@ export default function App() {
 
   const handleOrderCompleted = (newOrder: OrderRecord) => {
     setOrders(prev => [newOrder, ...prev.filter(o => o.id !== newOrder.id)]);
-    fetchOrders();
-  };
-
-  const handleSelectOrderFromNotif = (orderId: string) => {
-    setSelectedOrderId(orderId);
-    setIsOrdersOpen(true);
   };
 
   // Cart calculations
@@ -236,13 +221,7 @@ export default function App() {
       <Header
         cartCount={cartCount}
         cartTotal={cartTotal}
-        ordersCount={orders.length}
         onOpenCart={() => setIsCheckoutOpen(true)}
-        onOpenOrders={() => {
-          setSelectedOrderId(null);
-          setIsOrdersOpen(true);
-        }}
-        onSelectOrder={handleSelectOrderFromNotif}
       />
 
       {/* Main Content */}
@@ -283,22 +262,6 @@ export default function App() {
         onRemoveItem={handleRemoveItem}
         onClearCart={handleClearCart}
         onOrderCompleted={handleOrderCompleted}
-        onOpenOrders={() => {
-          setIsOrdersOpen(true);
-          setSelectedOrderId(null);
-        }}
-        showToast={showToast}
-      />
-
-      <OrdersDrawer
-        isOpen={isOrdersOpen}
-        onClose={() => {
-          setIsOrdersOpen(false);
-          setSelectedOrderId(null);
-        }}
-        orders={orders}
-        onOrderUpdated={fetchOrders}
-        selectedOrderId={selectedOrderId}
         showToast={showToast}
       />
 
@@ -308,7 +271,6 @@ export default function App() {
         config={mpConfig}
         onConfigUpdated={() => {
           fetchConfig();
-          fetchOrders();
         }}
         showToast={showToast}
       />
@@ -318,8 +280,6 @@ export default function App() {
         onClose={() => setIsAdminOpen(false)}
         procedures={procedures}
         onProceduresUpdated={fetchProcedures}
-        orders={orders}
-        onOrdersUpdated={fetchOrders}
         onOpenMpSettings={() => setIsMpModalOpen(true)}
         showToast={showToast}
       />

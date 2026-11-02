@@ -21,15 +21,36 @@ export interface PackageOption {
  * - 5 sessions: price * 5 with 25% OFF (multiplica por 5 e aplica 25% de desconto)
  */
 export function calculatePackages(basePrice: number): Record<PackageType, PackageOption> {
+  // If basePrice is very small (like test 0.01), keep it simple without packages
+  if (basePrice < 1) {
+    const pSingle: PackageOption = {
+      type: 'single',
+      title: 'Teste Único',
+      shortLabel: 'Teste R$ 0,01',
+      sessions: 1,
+      originalPrice: basePrice,
+      discountPercent: 0,
+      finalPrice: basePrice,
+      pricePerSession: basePrice,
+      savings: 0,
+      description: 'Cobrança teste para validação de checkout no Mercado Pago.',
+    };
+    return {
+      single: pSingle,
+      package_3: pSingle,
+      package_5: pSingle,
+    };
+  }
+
   // 3 sessões: multiplica por 3 e aplica 15% de desconto
-  const p3Original = Math.round(basePrice * 3);
-  const p3Final = Math.round(p3Original * 0.85); // 15% de desconto
-  const p3Savings = p3Original - p3Final;
+  const p3Original = Number((basePrice * 3).toFixed(2));
+  const p3Final = Number((p3Original * 0.85).toFixed(2));
+  const p3Savings = Number((p3Original - p3Final).toFixed(2));
 
   // 5 sessões: multiplica por 5 e aplica 25% de desconto
-  const p5Original = Math.round(basePrice * 5);
-  const p5Final = Math.round(p5Original * 0.75); // 25% de desconto
-  const p5Savings = p5Original - p5Final;
+  const p5Original = Number((basePrice * 5).toFixed(2));
+  const p5Final = Number((p5Original * 0.75).toFixed(2));
+  const p5Savings = Number((p5Original - p5Final).toFixed(2));
 
   return {
     single: {
@@ -52,7 +73,7 @@ export function calculatePackages(basePrice: number): Record<PackageType, Packag
       originalPrice: p3Original,
       discountPercent: 15,
       finalPrice: p3Final,
-      pricePerSession: Math.round(p3Final / 3),
+      pricePerSession: Number((p3Final / 3).toFixed(2)),
       savings: p3Savings,
       badge: '15% OFF',
       description: 'Protocolo recomendado com 3 visitas domiciliares programadas.',
@@ -65,12 +86,24 @@ export function calculatePackages(basePrice: number): Record<PackageType, Packag
       originalPrice: p5Original,
       discountPercent: 25,
       finalPrice: p5Final,
-      pricePerSession: Math.round(p5Final / 5),
+      pricePerSession: Number((p5Final / 5).toFixed(2)),
       savings: p5Savings,
       badge: 'Super Oferta - 25% OFF',
       description: 'Tratamento intensivo contínuo com a maior economia por sessão.',
     },
   };
+}
+
+export function isTestProcedure(proc?: { id?: string; name?: string; price?: number } | null): boolean {
+  if (!proc) return false;
+  const id = (proc.id || '').toLowerCase();
+  const name = (proc.name || '').toLowerCase();
+  return (
+    id === 'teste-checkout-centavo' ||
+    id.includes('teste') ||
+    name.includes('teste') ||
+    (typeof proc.price === 'number' && proc.price <= 0.05)
+  );
 }
 
 export function isAvaliacaoProcedure(proc?: { id?: string; name?: string } | null): boolean {
@@ -88,11 +121,15 @@ export function isAvaliacaoProcedure(proc?: { id?: string; name?: string } | nul
   );
 }
 
+export function isSinglePricingProcedure(proc?: { id?: string; name?: string; price?: number } | null): boolean {
+  return isAvaliacaoProcedure(proc) || isTestProcedure(proc);
+}
+
 /**
  * Helper to build a CartItem from a procedure and a package type
  */
 export function buildCartItem(procedure: Procedure, packageType: PackageType = 'single'): CartItem {
-  if (isAvaliacaoProcedure(procedure)) {
+  if (isSinglePricingProcedure(procedure)) {
     return {
       ...procedure,
       id: procedure.id,

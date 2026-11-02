@@ -17,12 +17,10 @@ import {
   Sparkles,
   AlertTriangle,
   ImageIcon,
-  Calendar as CalendarIcon,
   Key
 } from 'lucide-react';
-import { Procedure, OrderRecord } from '../types';
+import { Procedure } from '../types';
 import { api } from '../services/api';
-import { AdminCalendar } from './AdminCalendar';
 import { isAvaliacaoProcedure } from '../utils/packages';
 
 interface AdminPanelProps {
@@ -30,8 +28,6 @@ interface AdminPanelProps {
   onClose: () => void;
   procedures: Procedure[];
   onProceduresUpdated: () => void;
-  orders?: OrderRecord[];
-  onOrdersUpdated?: () => void;
   onOpenMpSettings?: () => void;
   showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
@@ -41,75 +37,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onClose,
   procedures,
   onProceduresUpdated,
-  orders = [],
-  onOrdersUpdated,
   onOpenMpSettings,
   showToast,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => api.isAdminAuthenticated());
-  const [activeTab, setActiveTab] = useState<'procedures' | 'calendar'>('procedures');
-  const [allOrders, setAllOrders] = useState<OrderRecord[]>(orders);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  // Synchronize orders with prop and backend
-  useEffect(() => {
-    if (orders && orders.length > 0) {
-      setAllOrders(orders);
-    }
-  }, [orders]);
-
-  const fetchLatestOrders = async () => {
-    try {
-      const list = await api.getOrders();
-      setAllOrders(list);
-      if (onOrdersUpdated) onOrdersUpdated();
-    } catch {}
-  };
-
-  useEffect(() => {
-    if (isOpen && isAuthenticated) {
-      fetchLatestOrders();
-    }
-  }, [isOpen, isAuthenticated]);
-
-  // Global conflict counter for the badge on the Agenda tab
-  const totalConflictCount = useMemo(() => {
-    const datesMap = new Map<string, OrderRecord[]>();
-    allOrders.forEach(o => {
-      if (o.paymentStatus === 'cancelado' || o.paymentStatus === 'recusado') return;
-      const iso = o.schedule?.isoDate;
-      if (!iso) return;
-      const list = datesMap.get(iso) || [];
-      list.push(o);
-      datesMap.set(iso, list);
-    });
-
-    let conflicts = 0;
-    datesMap.forEach(dayOrders => {
-      if (dayOrders.length >= 2) {
-        const times = dayOrders.map(o => {
-          const [h, m] = (o.schedule?.time || '00:00').split(':').map(Number);
-          return (h || 0) * 60 + (m || 0);
-        });
-        let hasConflict = false;
-        for (let i = 0; i < times.length; i++) {
-          for (let j = i + 1; j < times.length; j++) {
-            if (Math.abs(times[i] - times[j]) < 60) {
-              hasConflict = true;
-              break;
-            }
-          }
-          if (hasConflict) break;
-        }
-        if (hasConflict) conflicts++;
-      }
-    });
-    return conflicts;
-  }, [allOrders]);
 
   // Filter & Search
   const [search, setSearch] = useState('');
@@ -295,10 +231,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   Concierge Teresina
                 </span>
               </div>
-              <p className="text-xs text-neutral-400">
-                {activeTab === 'procedures' 
-                  ? 'Altere títulos, descrições, benefícios e valores dos procedimentos.' 
-                  : 'Calendário de atendimentos domiciliares e verificação de conflitos de horário.'}
+              <p className="text-xs text-neutral-400 mt-0.5">
+                Altere títulos, fotos, descrições, benefícios e valores dos procedimentos.
               </p>
             </div>
           </div>
@@ -326,57 +260,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         {isAuthenticated && (
           <div className="px-6 py-2.5 bg-onyx-950 border-b border-white/10 flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setActiveTab('procedures');
-                  setEditingProcedure(null);
-                  setIsCreatingNew(false);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'procedures'
-                    ? 'bg-gold-500 text-onyx-950 shadow-md font-bold'
-                    : 'bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10'
-                }`}
-              >
+              <div className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 bg-gold-500 text-onyx-950 shadow-md font-bold">
                 <Tag className="w-3.5 h-3.5" />
-                <span>Procedimentos</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded ${
-                  activeTab === 'procedures' 
-                    ? 'bg-onyx-950/20 text-onyx-950 font-bold' 
-                    : 'bg-white/10 text-neutral-400'
-                }`}>
+                <span>Catálogo de Procedimentos</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-onyx-950/20 text-onyx-950 font-bold">
                   {procedures.length}
                 </span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab('calendar');
-                  setEditingProcedure(null);
-                  setIsCreatingNew(false);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'calendar'
-                    ? 'bg-gold-500 text-onyx-950 shadow-md font-bold'
-                    : 'bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <CalendarIcon className="w-3.5 h-3.5" />
-                <span>Agenda & Calendário</span>
-                {totalConflictCount > 0 ? (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500 text-onyx-950 font-black animate-pulse flex items-center gap-0.5">
-                    <AlertTriangle className="w-2.5 h-2.5" /> {totalConflictCount} {totalConflictCount === 1 ? 'conflito' : 'conflitos'}!
-                  </span>
-                ) : (
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded ${
-                    activeTab === 'calendar' 
-                      ? 'bg-onyx-950/20 text-onyx-950 font-bold' 
-                      : 'bg-white/10 text-neutral-400'
-                  }`}>
-                    {allOrders.length}
-                  </span>
-                )}
-              </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
@@ -483,13 +373,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </form>
             </div>
-          ) : activeTab === 'calendar' ? (
-            /* Calendar & Agenda View with Conflict Detection */
-            <AdminCalendar
-              orders={allOrders}
-              onOrdersUpdated={fetchLatestOrders}
-              showToast={showToast}
-            />
           ) : editingProcedure || isCreatingNew ? (
             /* Procedure Editor (Create / Edit) */
             <form onSubmit={handleSaveProcedure} className="space-y-6 max-w-3xl mx-auto">
@@ -622,7 +505,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         alt="Preview"
                         className="w-10 h-10 rounded-lg object-cover border border-white/10"
                         onError={(e) => {
-                          (e.target as any).src = 'https://images.unsplash.com/photo-1512290900672-1f02e646271a?auto=format&fit=crop&w=700&q=80';
+                          (e.target as any).src = 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80';
                         }}
                       />
                     )}
@@ -812,7 +695,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           alt={proc.name}
                           className="w-16 h-16 rounded-xl object-cover border border-white/10 shrink-0"
                           onError={(e) => {
-                            (e.target as any).src = 'https://images.unsplash.com/photo-1512290900672-1f02e646271a?auto=format&fit=crop&w=700&q=80';
+                            (e.target as any).src = 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80';
                           }}
                         />
                         <div className="space-y-1">

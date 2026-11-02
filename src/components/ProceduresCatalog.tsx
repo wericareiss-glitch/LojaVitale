@@ -3,7 +3,7 @@ import { Sparkles, Clock, Plus, Check, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Procedure, PackageType } from '../types';
 import { PROCEDURES } from '../data/procedures';
-import { calculatePackages, isAvaliacaoProcedure } from '../utils/packages';
+import { calculatePackages, isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure } from '../utils/packages';
 
 interface ProceduresCatalogProps {
   procedures?: Procedure[];
@@ -89,6 +89,8 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filtered.map(proc => {
           const isConsulta = isAvaliacaoProcedure(proc);
+          const isTest = isTestProcedure(proc);
+          const isSinglePrice = isSinglePricingProcedure(proc);
           const currentPkgType = selectedPackages[proc.id] || 'single';
           const pkgs = calculatePackages(proc.price);
           const activePkg = pkgs[currentPkgType] || pkgs.single;
@@ -112,7 +114,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                     loading="lazy"
                   />
                   <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-onyx-950/80 backdrop-blur-md text-gold-400 border border-gold-500/30">
-                    Domicílio em THE
+                    {isTest ? 'Ambiente Real' : 'Domicílio em THE'}
                   </span>
                   <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-black/70 backdrop-blur-sm text-neutral-300 flex items-center gap-1">
                     <Clock className="w-3 h-3 text-gold-400" /> {proc.duration}
@@ -127,8 +129,15 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                   {proc.description}
                 </p>
 
-                {/* Pacotes Selector Tabs (Eliminado para Avaliação) */}
-                {isConsulta ? (
+                {/* Pacotes Selector Tabs */}
+                {isTest ? (
+                  <div className="mb-3 p-2 rounded-xl bg-onyx-950 border border-blue-500/20 flex items-center justify-between text-[11px]">
+                    <span className="text-blue-300 font-medium">Checkout de Teste</span>
+                    <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded">
+                      R$ 0,01
+                    </span>
+                  </div>
+                ) : isConsulta ? (
                   <div className="mb-3 p-2 rounded-xl bg-onyx-950 border border-gold-500/20 flex items-center justify-between text-[11px]">
                     <span className="text-gold-300 font-medium">Diagnóstico Individualizado</span>
                     <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded">
@@ -186,29 +195,33 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-neutral-500 uppercase tracking-wider block">
-                        {isConsulta ? 'Valor da Avaliação' : currentPkgType === 'single' ? 'Valor da Sessão' : `${activePkg.title} (${activePkg.discountPercent}% OFF)`}
+                        {isTest ? 'Valor Simbólico de Teste' : isConsulta ? 'Valor da Avaliação' : currentPkgType === 'single' ? 'Valor da Sessão' : `${activePkg.title} (${activePkg.discountPercent}% OFF)`}
                       </span>
                     </div>
 
                     <div className="flex items-baseline gap-2">
-                      {!isConsulta && currentPkgType !== 'single' && (
+                      {!isSinglePrice && currentPkgType !== 'single' && (
                         <span className="text-xs text-neutral-500 line-through">
                           {formatCurrency(activePkg.originalPrice)}
                         </span>
                       )}
                       <span className="text-lg font-bold text-gold-400 font-sans">
-                        {formatCurrency(isConsulta ? proc.price : activePkg.finalPrice)}
+                        {formatCurrency(isSinglePrice ? proc.price : activePkg.finalPrice)}
                       </span>
                     </div>
 
-                    {!isConsulta && currentPkgType !== 'single' && (
+                    {!isSinglePrice && currentPkgType !== 'single' && (
                       <span className="text-[10px] text-neutral-400 block mt-0.5">
                         {formatCurrency(activePkg.pricePerSession)} / visita • Economiza {formatCurrency(activePkg.savings)}
                       </span>
                     )}
                   </div>
 
-                  {isConsulta ? (
+                  {isTest ? (
+                    <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded">
+                      PIX / Cartão
+                    </span>
+                  ) : isConsulta ? (
                     <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">
                       Cortesia c/ outro
                     </span>
@@ -221,7 +234,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => onSelectProcedure(proc, currentPkgType)}
+                    onClick={() => onSelectProcedure(proc, isSinglePrice ? 'single' : currentPkgType)}
                     className="py-2 px-3 rounded-xl bg-onyx-850 hover:bg-onyx-800 text-neutral-300 hover:text-white text-xs font-semibold border border-white/5 transition-colors"
                   >
                     Ver Detalhes
@@ -230,7 +243,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                     whileTap={{ scale: 0.93 }}
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    onClick={() => handleAddToCartWithAnim(proc, isConsulta ? 'single' : currentPkgType)}
+                    onClick={() => handleAddToCartWithAnim(proc, isSinglePrice ? 'single' : currentPkgType)}
                     className={`relative overflow-hidden py-2 px-2.5 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md cursor-pointer ${
                       justAddedMap[proc.id]
                         ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-onyx-950 shadow-emerald-500/30 shadow-lg ring-1 ring-emerald-300'

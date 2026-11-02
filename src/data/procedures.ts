@@ -24,7 +24,7 @@ export const PROCEDURES: Procedure[] = [
     price: 170,
     duration: "50 min",
     sessions: "Sessão com enzimas ativas",
-    image: "https://images.unsplash.com/photo-1512290900672-1f02e646271a?auto=format&fit=crop&w=700&q=80",
+    image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80",
     description: "Redução de gordura localizada sem cortes e sem cirurgia. Aplicação direta onde você mais quer perder: barriga, flancos, culote, costas ou papada.",
     benefits: [
       "Afina a silhueta e quebra a gordura teimosa",
@@ -127,6 +127,22 @@ export const PROCEDURES: Procedure[] = [
       "Acaba de vez com pelinhas e ressecamento",
       "Restaura o volume de hidratação natural",
       "Sem dor e sem alteração artificial do formato"
+    ]
+  },
+  {
+    id: "teste-checkout-centavo",
+    name: "Procedimento de Teste (PIX / Cartão)",
+    category: "facial",
+    price: 0.01,
+    duration: "10 min",
+    sessions: "Teste de pagamento",
+    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=700&q=80",
+    description: "Procedimento de teste com custo simbólico de apenas R$ 0,01 para validar o fluxo real de checkout e recebimento via PIX ou Cartão no Mercado Pago.",
+    benefits: [
+      "Cobrança real de apenas 1 centavo (R$ 0,01)",
+      "Validação imediata do QR Code PIX e do processador de cartão",
+      "Confirmação instantânea do pagamento no Mercado Pago",
+      "Ideal para testes prévios da integração bancária"
     ]
   }
 ];

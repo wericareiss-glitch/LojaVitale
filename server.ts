@@ -1190,7 +1190,7 @@ app.post('/api/procedures', (req: Request, res: Response) => {
       price: Math.max(0, Number(price) || 0),
       duration: duration || '45 min',
       sessions: sessions || '1 sessão',
-      image: image || 'https://images.unsplash.com/photo-1512290900672-1f02e646271a?auto=format&fit=crop&w=700&q=80',
+      image: image || 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80',
       description: String(description || '').trim(),
       benefits: Array.isArray(benefits) ? benefits.map((b: any) => String(b).trim()).filter(Boolean) : [],
     };

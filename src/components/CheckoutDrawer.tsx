@@ -35,7 +35,7 @@ import { CartItem, PatientData, OrderRecord, PixPaymentData } from '../types';
 import { CLINIC_CONFIG } from '../data/procedures';
 import { api } from '../services/api';
 import { calculateShippingFee, ORIGIN_CONFIG, ShippingCalculation } from '../services/shipping';
-import { isAvaliacaoProcedure } from '../utils/packages';
+import { isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure } from '../utils/packages';
 
 interface CheckoutDrawerProps {
   isOpen: boolean;
@@ -45,7 +45,6 @@ interface CheckoutDrawerProps {
   onRemoveItem: (id: string) => void;
   onClearCart: () => void;
   onOrderCompleted: (order: OrderRecord) => void;
-  onOpenOrders: () => void;
   showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
 
@@ -57,7 +56,6 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
   onRemoveItem,
   onClearCart,
   onOrderCompleted,
-  onOpenOrders,
   showToast,
 }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -949,7 +947,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                           </div>
                           <span className="text-[10px] text-neutral-400 flex items-center gap-1 mt-0.5">
                             <Clock className="w-3 h-3 text-gold-400" /> {item.duration}
-                            {!isAvaliacaoProcedure(item) && item.packageSessions && item.packageSessions > 1 && (
+                            {!isSinglePricingProcedure(item) && item.packageSessions && item.packageSessions > 1 && (
                               <span className="text-neutral-400">• {item.packageSessions} sessões programadas</span>
                             )}
                           </span>
@@ -957,9 +955,9 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
-                        {isAvaliacaoProcedure(item) ? (
+                        {isSinglePricingProcedure(item) ? (
                           <span className="px-2.5 py-1 rounded-lg bg-onyx-950 border border-white/5 text-[11px] text-gold-400 font-medium">
-                            Avaliação Única
+                            {isTestProcedure(item) ? 'Teste (R$ 0,01)' : 'Avaliação Única'}
                           </span>
                         ) : (
                           <div className="flex items-center border border-white/10 rounded-xl bg-onyx-950 overflow-hidden">
@@ -1865,18 +1863,9 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                   </a>
                   <button
                     onClick={() => window.print()}
-                    className="py-2.5 px-3 rounded-xl bg-onyx-900 border border-white/10 hover:border-gold-500/40 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    className="py-2.5 px-4 rounded-xl bg-onyx-900 border border-white/10 hover:border-gold-500/40 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <Printer className="w-4 h-4 text-gold-400" /> Imprimir
-                  </button>
-                  <button
-                    onClick={() => {
-                      onClose();
-                      onOpenOrders();
-                    }}
-                    className="py-2.5 px-3 rounded-xl bg-onyx-900 border border-white/10 hover:border-gold-500/40 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-gold-400" /> Meus Pedidos
+                    <Printer className="w-4 h-4 text-gold-400" /> Imprimir Comprovante
                   </button>
                 </div>
 

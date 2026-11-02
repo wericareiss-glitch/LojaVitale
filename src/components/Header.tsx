@@ -1,25 +1,18 @@
 import React from 'react';
-import { Sparkles, ShoppingBag, Zap, Layers } from 'lucide-react';
+import { Sparkles, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { NotificationsPopover } from './NotificationsPopover';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   cartCount: number;
   cartTotal: number;
-  ordersCount: number;
   onOpenCart: () => void;
-  onOpenOrders: () => void;
-  onSelectOrder: (orderId: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   cartCount,
   cartTotal,
-  ordersCount,
   onOpenCart,
-  onOpenOrders,
-  onSelectOrder,
 }) => {
   const formatCurrency = (val: number) => {
     return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -73,27 +66,10 @@ export const Header: React.FC<HeaderProps> = ({
             </a>
           </nav>
 
-          {/* Actions: PWA Install + Notification Bell + Orders + Cart */}
+          {/* Actions: PWA Install + Cart */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* PWA In-App Install Button */}
             <PWAInstallButton variant="header" />
-
-            {/* Notification Bell */}
-            <NotificationsPopover onSelectOrder={onSelectOrder} />
-
-            {/* Orders Management Button */}
-            <button
-              onClick={onOpenOrders}
-              className="relative flex items-center gap-2 px-3.5 py-2 rounded-full bg-onyx-850 hover:bg-onyx-800 border border-white/10 hover:border-gold-500/40 text-neutral-300 hover:text-white transition-all text-xs font-semibold"
-            >
-              <Layers className="w-4 h-4 text-gold-400" />
-              <span className="hidden md:inline">Pedidos</span>
-              {ordersCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-onyx-950 text-gold-400 border border-gold-500/30 text-[10px] font-bold flex items-center justify-center">
-                  {ordersCount}
-                </span>
-              )}
-            </button>
 
             {/* Cart Button with motion feedback */}
             <motion.button

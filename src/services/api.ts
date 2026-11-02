@@ -126,7 +126,7 @@ function pushLocalNotification(orderId: string, title: string, message: string, 
 }
 
 // Local storage procedures helpers (with cache versioning)
-const PROCEDURES_VERSION = 'v4_no_sessions_avaliacao';
+const PROCEDURES_VERSION = 'v5_test_centavo_and_clean';
 
 function getLocalProcedures(): Procedure[] {
   try {
@@ -620,7 +620,7 @@ export const api = {
       price: Number(procData.price) || 0,
       duration: procData.duration || '45 min',
       sessions: procData.sessions || '1 sessão',
-      image: procData.image || 'https://images.unsplash.com/photo-1512290900672-1f02e646271a?auto=format&fit=crop&w=700&q=80',
+      image: procData.image || 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80',
       description: procData.description || '',
       benefits: procData.benefits || [],
     };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Check, CalendarPlus, Sparkles, Tag, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Procedure, PackageType } from '../types';
-import { calculatePackages, isAvaliacaoProcedure } from '../utils/packages';
+import { calculatePackages, isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure } from '../utils/packages';
 
 interface ProcedureModalProps {
   procedure: Procedure | null;
@@ -21,12 +21,14 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
   if (!procedure) return null;
 
   const isConsulta = isAvaliacaoProcedure(procedure);
+  const isTest = isTestProcedure(procedure);
+  const isSinglePrice = isSinglePricingProcedure(procedure);
   const packages = calculatePackages(procedure.price);
   const currentPkg = packages[selectedPackage] || packages.single;
 
   const handleAddToCartModal = () => {
     setIsJustAdded(true);
-    onAddToCart(procedure, isConsulta ? 'single' : selectedPackage);
+    onAddToCart(procedure, isSinglePrice ? 'single' : selectedPackage);
     setTimeout(() => {
       setIsJustAdded(false);
       onClose();
@@ -74,8 +76,19 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
             {procedure.description}
           </p>
 
-          {/* Pacotes Promocionais: 3 Sessões (15% OFF) e 5 Sessões (25% OFF) - Ocultado para Avaliação */}
-          {isConsulta ? (
+          {/* Pacotes Promocionais: Ocultado para Avaliação e Teste */}
+          {isTest ? (
+            <div className="p-4 rounded-xl bg-onyx-850 border border-blue-500/30 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-white block">Procedimento de Teste Real</span>
+                <span className="text-[11px] text-neutral-400">Validação segura do checkout PIX e Cartão no Mercado Pago</span>
+              </div>
+              <div className="text-right">
+                <span className="text-xl font-bold text-blue-400 block">{formatCurrency(procedure.price)}</span>
+                <span className="text-[10px] text-blue-300 font-semibold">Cobrança de R$ 0,01</span>
+              </div>
+            </div>
+          ) : isConsulta ? (
             <div className="p-4 rounded-xl bg-onyx-850 border border-gold-500/30 flex items-center justify-between">
               <div>
                 <span className="text-xs font-bold text-white block">Avaliação Individualizada</span>
@@ -217,16 +230,16 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
           <div className="flex items-center justify-between pt-3 border-t border-white/5">
             <div>
               <span className="text-[11px] text-neutral-400 block">
-                {isConsulta ? 'Valor da Avaliação' : selectedPackage === 'single' ? 'Valor da Sessão Avulsa' : `${currentPkg.title} (${currentPkg.discountPercent}% OFF)`}
+                {isTest ? 'Valor Simbólico de Teste' : isConsulta ? 'Valor da Avaliação' : selectedPackage === 'single' ? 'Valor da Sessão Avulsa' : `${currentPkg.title} (${currentPkg.discountPercent}% OFF)`}
               </span>
               <div className="flex items-baseline gap-2">
-                {!isConsulta && selectedPackage !== 'single' && (
+                {!isSinglePrice && selectedPackage !== 'single' && (
                   <span className="text-xs text-neutral-500 line-through font-mono">
                     {formatCurrency(currentPkg.originalPrice)}
                   </span>
                 )}
                 <span className="text-2xl font-bold text-gold-400 font-sans">
-                  {formatCurrency(isConsulta ? procedure.price : currentPkg.finalPrice)}
+                  {formatCurrency(isSinglePrice ? procedure.price : currentPkg.finalPrice)}
                 </span>
               </div>
             </div>
@@ -269,7 +282,7 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
                     className="flex items-center gap-2"
                   >
                     <CalendarPlus className="w-4 h-4" /> 
-                    <span>{isConsulta ? 'Agendar Avaliação' : selectedPackage === 'single' ? 'Agendar em Casa' : `Agendar ${currentPkg.title}`}</span>
+                    <span>{isTest ? 'Adicionar Teste (R$ 0,01)' : isConsulta ? 'Agendar Avaliação' : selectedPackage === 'single' ? 'Agendar em Casa' : `Agendar ${currentPkg.title}`}</span>
                   </motion.span>
                 )}
               </AnimatePresence>
