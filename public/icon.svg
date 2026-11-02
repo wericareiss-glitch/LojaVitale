@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#1A181C"/>
+      <stop offset="100%" stop-color="#070709"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#AA771C"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Ring -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="url(#goldGrad)" stroke-width="6" opacity="0.8"/>
+  <circle cx="256" cy="256" r="185" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-dasharray="8 6" opacity="0.4"/>
+  
+  <!-- Center Luxury V Monogram -->
+  <path d="M170 180 L256 360 L342 180 L305 180 L256 300 L207 180 Z" fill="url(#goldGrad)" filter="url(#glow)"/>
+  
+  <!-- Sparkles -->
+  <path d="M256 120 L262 145 L287 151 L262 157 L256 182 L250 157 L225 151 L250 145 Z" fill="#FFFBEB"/>
+  <path d="M350 220 L354 235 L369 239 L354 243 L350 258 L346 243 L331 239 L346 235 Z" fill="#FCD34D" opacity="0.8"/>
+</svg>

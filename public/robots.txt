@@ -1,0 +1,30 @@
+# Robots.txt - Vitale Concierge Estética Avançada (Teresina - PI)
+# Otimizado para indexação no Google Search, Googlebot e Googlebot-Image
+
+User-agent: *
+Allow: /
+Allow: /assets/
+Disallow: /api/
+Disallow: /admin
+
+# Regras específicas para o Googlebot
+User-agent: Googlebot
+Allow: /
+Allow: /assets/
+Allow: /*.js$
+Allow: /*.css$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.svg$
+Disallow: /api/
+Disallow: /admin
+
+# Googlebot-Image
+User-agent: Googlebot-Image
+Allow: /
+Allow: /assets/
+
+# Host e Sitemap
+Sitemap: https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/sitemap.xml

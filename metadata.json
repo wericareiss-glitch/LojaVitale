@@ -1,0 +1,8 @@
+{
+  "name": "Vitale Concierge — Estética com Mercado Pago",
+  "description": "Agendamento concierge de estética avançada a domicílio em Teresina com integração oficial ao Mercado Pago para pagamentos via PIX e Cartão.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

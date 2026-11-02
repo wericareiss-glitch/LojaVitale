@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --color-onyx-950: #070709;
+  --color-onyx-900: #0c0c0f;
+  --color-onyx-850: #121217;
+  --color-onyx-800: #1a1a22;
+  --color-onyx-700: #252530;
+  --color-onyx-600: #343444;
+  --color-gold-300: #f5e39d;
+  --color-gold-400: #e5c56c;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #b89428;
+  --color-gold-700: #94741c;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #0c0c0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #252530;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Metallic Gold Gradients */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #f7e7a8 0%, #d4af37 50%, #aa8214 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #e5c56c 0%, #d4af37 50%, #aa8214 100%);
+}
+.gold-card-border {
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+.gold-card-border:hover {
+  border: 1px solid rgba(212, 175, 55, 0.5);
+}
+.gold-glow {
+  box-shadow: 0 0 30px -5px rgba(212, 175, 55, 0.25);
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.94; transform: scale(1.015); }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Print styles for Receipt */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printReceiptArea, #printReceiptArea * {
+    visibility: visible;
+  }
+  #printReceiptArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    padding: 20px;
+  }
+  #printReceiptArea button, #printReceiptArea a {
+    display: none !important;
+  }
+}

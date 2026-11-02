@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- Página Principal / Home -->
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Seções Principais (Deep Links) -->
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/#procedimentos</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/#cobertura</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/#como-funciona</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/#faq</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Categorias de Procedimentos -->
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?categoria=facial</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?categoria=corporal</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?categoria=injetaveis</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Procedimentos Específicos -->
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=consulta-avaliacao</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=enzimas-lipoliticas</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=vitaminas-injetaveis</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=limpeza-pele-profunda</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=microagulhamento-drug</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=peeling-quimico</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=drenagem-linfatica</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://ais-pre-fnzjaxcbsyycxppive3j73-895274897580.us-east1.run.app/?procedimento=hydra-gloss-lips</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vitale — Estética Avançada a Domicílio em Teresina | Concierge Care</title>
+
+  <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            onyx: {
+              950: '#070709',
+              900: '#0c0c0f',
+              850: '#121217',
+              800: '#1a1a22',
+              700: '#252530',
+              600: '#343444',
+            },
+            gold: {
+              300: '#f5e39d',
+              400: '#e5c56c',
+              500: '#d4af37',
+              600: '#b89428',
+              700: '#94741c',
+            }
+          },
+          animation: {
+            'pulse-subtle': 'pulseSubtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            pulseSubtle: {
+              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+              '50%': { opacity: '.94', transform: 'scale(1.015)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c0c0f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #252530;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d4af37;
+    }
+
+    /* Metallic Gold Gradients */
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #f7e7a8 0%, #d4af37 50%, #aa8214 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gold-gradient-bg {
+      background: linear-gradient(135deg, #e5c56c 0%, #d4af37 50%, #aa8214 100%);
+    }
+    .gold-card-border {
+      border: 1px solid rgba(212, 175, 55, 0.2);
+    }
+    .gold-card-border:hover {
+      border: 1px solid rgba(212, 175, 55, 0.5);
+    }
+    .gold-glow {
+      box-shadow: 0 0 30px -5px rgba(212, 175, 55, 0.25);
+    }
+
+    /* Print styles for Receipt */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printReceiptArea, #printReceiptArea * {
+        visibility: visible;
+      }
+      #printReceiptArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+        padding: 20px;
+      }
+      #printReceiptArea button, #printReceiptArea a {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-onyx-950 text-neutral-200 font-sans antialiased selection:bg-gold-500/30 selection:text-gold-300 min-h-screen flex flex-col justify-between">
+
+  <!-- ================= TOP NOTICE BAR (TERESINA - PI COVERAGE) ================= -->
+  <div class="bg-gradient-to-r from-onyx-900 via-onyx-850 to-onyx-900 border-b border-gold-500/25 py-2 px-4 text-center text-xs tracking-wider text-neutral-300">
+    <span class="inline-flex items-center gap-2 flex-wrap justify-center">
+      <span class="inline-block w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+      <span class="text-gold-400 font-bold uppercase tracking-widest text-[11px]">Exclusivo em Teresina - PI:</span>
+      Atendimento domiciliar em toda a capital (Zona Leste, Centro, Zona Sul, Grande Dirceu e Zona Norte).
+    </span>
+  </div>
+
+  <!-- ================= HEADER / NAVBAR ================= -->
+  <header class="sticky top-0 z-40 bg-onyx-950/90 backdrop-blur-md border-b border-white/5 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-full border border-gold-500/40 flex items-center justify-center bg-onyx-900 group-hover:border-gold-400 transition-colors shadow-lg">
+          <i data-lucide="sparkles" class="w-5 h-5 text-gold-400"></i>
+        </div>
+        <div>
+          <span class="font-serif text-2xl tracking-[0.2em] font-bold text-white block leading-none">VITALE</span>
+          <span class="text-[9px] tracking-[0.25em] text-gold-400 font-medium uppercase">Concierge • Teresina - PI</span>
+        </div>
+      </a>
+
+      <!-- Quick Nav Info -->
+      <div class="hidden md:flex items-center gap-8 text-sm text-neutral-300 font-medium">
+        <a href="#procedimentos" class="hover:text-gold-400 transition-colors">Procedimentos</a>
+        <a href="#cobertura-teresina" class="hover:text-gold-400 transition-colors">Bairros Atendidos</a>
+        <a href="#como-funciona" class="hover:text-gold-400 transition-colors">Como Funciona</a>
+        <a href="#faq" class="hover:text-gold-400 transition-colors">Dúvidas Frequentes</a>
+      </div>
+
+      <!-- Action Button / Cart Trigger -->
+      <div class="flex items-center gap-3">
+        <button id="cartOpenBtn" onclick="openCheckoutDrawer()" class="relative flex items-center gap-3 px-4 py-2.5 rounded-full bg-onyx-850 border border-gold-500/30 hover:border-gold-400 text-white transition-all hover:bg-onyx-800 shadow-xl group">
+          <div class="relative">
+            <i data-lucide="shopping-bag" class="w-5 h-5 text-gold-400 group-hover:scale-110 transition-transform"></i>
+            <span id="cartCountBadge" class="absolute -top-2 -right-2 bg-gold-500 text-onyx-950 font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center scale-0 transition-transform">0</span>
+          </div>
+          <span class="text-xs font-semibold tracking-wider uppercase hidden sm:inline text-neutral-300 group-hover:text-white">Agendamento THE</span>
+          <span id="cartTotalHeader" class="text-xs font-bold text-gold-400 hidden sm:inline">R$ 0,00</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= HERO SECTION (HOME CARE CONCIERGE TERESINA) ================= -->
+  <section class="relative pt-14 pb-20 overflow-hidden border-b border-white/5">
+    <div class="absolute inset-0 pointer-events-none opacity-25">
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[750px] h-[360px] bg-gold-500/15 rounded-full blur-[140px]"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-onyx-850 border border-gold-500/30 text-gold-400 text-xs font-semibold uppercase tracking-widest mb-6 shadow-md">
+        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gold-400"></i> Atendimento Domiciliar Exclusivo em Teresina - PI
+      </div>
+
+      <h1 class="font-serif text-4xl sm:text-5xl md:text-6xl text-white font-normal max-w-4xl mx-auto leading-tight">
+        A mais alta tecnologia estética entregue <span class="italic font-normal gold-gradient-text">na sua residência em Teresina</span>
+      </h1>
+
+      <p class="mt-6 text-neutral-300 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed">
+        Evite o trânsito da Av. Raul Lopes, Frei Serafim e pontes da capital. Nossa equipe comparece ao seu endereço com maca cirúrgica portátil climatizada, maleta estéril e descartáveis hospitalares de uso único.
+      </p>
+
+      <!-- Trust Pillars (Teresina Specific) -->
+      <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div class="p-3.5 rounded-xl bg-onyx-900/80 border border-white/5 text-left flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gold-500/10 text-gold-400 flex items-center justify-center shrink-0">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white">Toda Teresina</h4>
+            <p class="text-[11px] text-neutral-400">Zona Leste, Sul, Sudeste e Norte</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-onyx-900/80 border border-white/5 text-left flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gold-500/10 text-gold-400 flex items-center justify-center shrink-0">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white">Maleta Cirúrgica</h4>
+            <p class="text-[11px] text-neutral-400">100% estéril e descartável</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-onyx-900/80 border border-white/5 text-left flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gold-500/10 text-gold-400 flex items-center justify-center shrink-0">
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white">Logística D+1</h4>
+            <p class="text-[11px] text-neutral-400">Preparo individual sob demanda</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-onyx-900/80 border border-white/5 text-left flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gold-500/10 text-gold-400 flex items-center justify-center shrink-0">
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white">WhatsApp VIP THE</h4>
+            <p class="text-[11px] text-neutral-400">Liberado pós-pagamento</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= PROCEDURES VITRINE ================= -->
+  <main id="procedimentos" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow">
+    
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <div>
+        <div class="inline-flex items-center gap-1.5 text-gold-400 text-xs font-semibold uppercase tracking-widest mb-1">
+          <i data-lucide="sparkle" class="w-3.5 h-3.5"></i> Protocolos de Alta Performance a Domicílio em Teresina
+        </div>
+        <h2 class="font-serif text-3xl sm:text-4xl text-white">Cardápio de Procedimentos Exclusivos</h2>
+      </div>
+
+      <!-- Categories Filter Tabs -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none" id="categoryFilters">
+        <button onclick="filterCategory('todos')" class="filter-btn active-filter px-4 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap bg-gold-500 text-onyx-950 shadow-md">
+          Todos os Procedimentos
+        </button>
+        <button onclick="filterCategory('injetaveis')" class="filter-btn px-4 py-2 rounded-full text-xs font-medium text-neutral-300 hover:text-white bg-onyx-850 hover:bg-onyx-800 border border-white/5 transition-all whitespace-nowrap">
+          Injetáveis & Enzimas
+        </button>
+        <button onclick="filterCategory('facial')" class="filter-btn px-4 py-2 rounded-full text-xs font-medium text-neutral-300 hover:text-white bg-onyx-850 hover:bg-onyx-800 border border-white/5 transition-all whitespace-nowrap">
+          Facial & Renovação Cutânea
+        </button>
+        <button onclick="filterCategory('corporal')" class="filter-btn px-4 py-2 rounded-full text-xs font-medium text-neutral-300 hover:text-white bg-onyx-850 hover:bg-onyx-800 border border-white/5 transition-all whitespace-nowrap">
+          Corporal & Drenagem
+        </button>
+      </div>
+    </div>
+
+    <!-- Procedures Grid -->
+    <div id="proceduresGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Populated dynamically via JS -->
+    </div>
+
+  </main>
+
+  <!-- ================= TERESINA NEIGHBORHOODS COVERAGE SECTION ================= -->
+  <section id="cobertura-teresina" class="py-16 bg-onyx-900 border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="text-gold-400 text-xs font-semibold uppercase tracking-widest flex items-center justify-center gap-1.5">
+          <i data-lucide="map" class="w-3.5 h-3.5"></i> Cobertura Geográfica
+        </span>
+        <h3 class="font-serif text-3xl text-white mt-1">Área de Atendimento Exclusiva em Teresina - PI</h3>
+        <p class="text-neutral-400 text-xs mt-2 leading-relaxed">
+          Atendemos residências, condomínios fechados e flats com pontualidade em todas as regiões da capital piauiense:
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Zona Leste -->
+        <div class="p-5 rounded-2xl bg-onyx-850 border border-white/5 space-y-2">
+          <div class="flex items-center gap-2 text-gold-400 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="compass" class="w-4 h-4"></i> Zona Leste
+          </div>
+          <h4 class="text-sm font-semibold text-white">Polo Nobre & Empresarial</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            Jóquei, Fátima, Ininga, Horto Florestal, São Cristóvão, Morada do Sol, Planalto Ininga e Ilhotas.
+          </p>
+        </div>
+
+        <!-- Zona Sul -->
+        <div class="p-5 rounded-2xl bg-onyx-850 border border-white/5 space-y-2">
+          <div class="flex items-center gap-2 text-gold-400 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="compass" class="w-4 h-4"></i> Zona Sul & Centro
+          </div>
+          <h4 class="text-sm font-semibold text-white">Central & Tradicional</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            Centro, Cabral, Por Enquanto, Vermelha, Pio XII, Cristo Rei, Três Andares e Lourival Parente.
+          </p>
+        </div>
+
+        <!-- Zona Sudeste -->
+        <div class="p-5 rounded-2xl bg-onyx-850 border border-white/5 space-y-2">
+          <div class="flex items-center gap-2 text-gold-400 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="compass" class="w-4 h-4"></i> Sudeste / Grande Dirceu
+          </div>
+          <h4 class="text-sm font-semibold text-white">Eixo Sudeste</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            Dirceu Arcoverde I e II, Itararé, Colorado, Parque Ideal, Parque Poti e São Sebastião.
+          </p>
+        </div>
+
+        <!-- Zona Norte -->
+        <div class="p-5 rounded-2xl bg-onyx-850 border border-white/5 space-y-2">
+          <div class="flex items-center gap-2 text-gold-400 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="compass" class="w-4 h-4"></i> Zona Norte
+          </div>
+          <h4 class="text-sm font-semibold text-white">Eixo Norte</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            Mocambinho, Buenos Aires, Primavera, Real Copagre, Marquês, Mafuá e Aeroporto.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW HOME CARE CONCIERGE WORKS ================= -->
+  <section id="como-funciona" class="py-16 bg-onyx-950 border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="text-gold-400 text-xs font-semibold uppercase tracking-widest">Experiência Sem Burocracia</span>
+        <h3 class="font-serif text-3xl text-white mt-1">Como funciona a visita na sua casa em Teresina?</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="p-6 rounded-2xl bg-onyx-900 border border-white/5 relative">
+          <span class="text-3xl font-serif text-gold-500/30 font-bold absolute top-4 right-4">01</span>
+          <div class="w-10 h-10 rounded-xl bg-gold-500/10 text-gold-400 flex items-center justify-center mb-4">
+            <i data-lucide="check-square" class="w-5 h-5"></i>
+          </div>
+          <h4 class="font-serif text-base text-white font-semibold mb-2">Escolha o Procedimento</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            Selecione no cardápio os tratamentos estéticos desejados para atendimento domiciliar.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-onyx-900 border border-white/5 relative">
+          <span class="text-3xl font-serif text-gold-500/30 font-bold absolute top-4 right-4">02</span>
+          <div class="w-10 h-10 rounded-xl bg-gold-500/10 text-gold-400 flex items-center justify-center mb-4">
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+          </div>
+          <h4 class="font-serif text-base text-white font-semibold mb-2">Marque Dia e Horário</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            Agendamentos estritamente com antecedência mínima de 24h (D+1). Não realizamos atendimentos no mesmo dia.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-onyx-900 border border-white/5 relative">
+          <span class="text-3xl font-serif text-gold-500/30 font-bold absolute top-4 right-4">03</span>
+          <div class="w-10 h-10 rounded-xl bg-gold-500/10 text-gold-400 flex items-center justify-center mb-4">
+            <i data-lucide="lock" class="w-5 h-5"></i>
+          </div>
+          <h4 class="font-serif text-base text-white font-semibold mb-2">Cadastre o CEP de Teresina</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            O sistema valida seu CEP de Teresina e você conclui o pagamento via PIX ou Cartão em até 12x.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-onyx-900 border border-white/5 relative">
+          <span class="text-3xl font-serif text-gold-500/30 font-bold absolute top-4 right-4">04</span>
+          <div class="w-10 h-10 rounded-xl bg-gold-500/10 text-gold-400 flex items-center justify-center mb-4">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <h4 class="font-serif text-base text-white font-semibold mb-2">WhatsApp VIP Desbloqueado</h4>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            Após a confirmação, o WhatsApp direto de suporte é liberado para orientações e confirmação de condomínio/portaria.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ SECTION ================= -->
+  <section id="faq" class="py-16 bg-onyx-900/60 border-t border-white/5">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-10">
+        <span class="text-gold-400 text-xs font-semibold uppercase tracking-widest">Teresina - PI</span>
+        <h3 class="font-serif text-3xl text-white mt-1">Dúvidas Frequentes</h3>
+      </div>
+
+      <div class="space-y-3">
+        <details class="group bg-onyx-850 p-4 rounded-xl border border-white/5 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-semibold text-white list-none">
+            <span>A Vitale atende apenas em Teresina - PI?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gold-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <p class="mt-3 text-xs text-neutral-400 leading-relaxed">
+            Sim. A nossa estrutura logística de maletas estéreis, acondicionamento térmico sob temperatura controlada e maca portátil opera exclusivamente no perímetro urbano de Teresina (Zona Leste, Centro, Zona Sul, Grande Dirceu e Zona Norte). Cidades vizinhas como Timon não estão cobertas nesta fase.
+          </p>
+        </details>
+
+        <details class="group bg-onyx-850 p-4 rounded-xl border border-white/5 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-semibold text-white list-none">
+            <span>Por que não é permitido agendar para o mesmo dia?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gold-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <p class="mt-3 text-xs text-neutral-400 leading-relaxed">
+            Padrão inegociável de biossegurança: as vitaminas e mesclas de enzimas são fracionadas e preparadas sob demanda estéril em farmácia magistral, e a maleta cirúrgica descartável é montada especificamente para o seu protocolo. O prazo de D+1 (a partir de amanhã) é mandatório.
+          </p>
+        </details>
+
+        <details class="group bg-onyx-850 p-4 rounded-xl border border-white/5 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-semibold text-white list-none">
+            <span>Como funciona a dedução cortesia da Consulta?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gold-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <p class="mt-3 text-xs text-neutral-400 leading-relaxed">
+            A Consulta e Avaliação Individualizada custa R$ 100,00 e inclui anamnese dérmica e prescrição. Caso você adicione qualquer outro procedimento no mesmo agendamento em Teresina, o sistema concede uma cortesia automática de R$ 100,00 no carrinho.
+          </p>
+        </details>
+
+        <details class="group bg-onyx-850 p-4 rounded-xl border border-white/5 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-semibold text-white list-none">
+            <span>Quando o WhatsApp da clínica é liberado?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gold-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <p class="mt-3 text-xs text-neutral-400 leading-relaxed">
+            O botão VIP do WhatsApp (com DDD 86 de Teresina) é desbloqueado automaticamente na tela final assim que o pagamento via PIX ou Cartão de Crédito é confirmado pelo sistema.
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-onyx-950 border-t border-white/5 pt-12 pb-8 text-neutral-500 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-full border border-gold-500/40 flex items-center justify-center bg-onyx-900">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-gold-400"></i>
+          </div>
+          <span class="font-serif text-lg tracking-widest text-white font-bold">VITALE</span>
+        </div>
+        <p class="leading-relaxed">Serviço Concierge de Estética Avançada e Injetáveis com atendimento 100% no domicílio do paciente em Teresina, Piauí.</p>
+      </div>
+
+      <div>
+        <h5 class="text-white font-semibold uppercase tracking-wider mb-3">Área de Cobertura</h5>
+        <p class="leading-relaxed">Teresina - PI (Zona Leste, Centro, Zona Sul, Grande Dirceu e Zona Norte).<br>Segunda a Sábado, das 08:30 às 18:30.</p>
+        <p class="mt-2 text-gold-400">Horários de atendimento pontual</p>
+      </div>
+
+      <div>
+        <h5 class="text-white font-semibold uppercase tracking-wider mb-3">Normas e Rigor Clínico</h5>
+        <p class="leading-relaxed">Procedimentos realizados com kits cirúrgicos descartáveis de uso único e maleta térmica climatizada, seguindo rigorosas normas de biossegurança.</p>
+      </div>
+
+      <div>
+        <h5 class="text-white font-semibold uppercase tracking-wider mb-3">Segurança e Pagamentos</h5>
+        <div class="flex items-center gap-2 text-neutral-400 mb-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Agendamento Seguro 256-bit
+        </div>
+        <div class="flex items-center gap-2 text-neutral-400 mb-2">
+          <i data-lucide="credit-card" class="w-4 h-4 text-emerald-400"></i> Cartão de Crédito em até 12x
+        </div>
+        <div class="flex items-center gap-2 text-neutral-400">
+          <i data-lucide="zap" class="w-4 h-4 text-gold-400"></i> PIX Instantâneo com QR Code
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/5 pt-6 text-center text-neutral-600">
+      <p>© 2026 Vitale Concierge Estética Avançada Ltda. Atendimento Exclusivo a Domicílio em Teresina - PI.</p>
+    </div>
+  </footer>
+
+  <!-- ================= PROCEDURE DETAILS MODAL ================= -->
+  <div id="detailsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-onyx-900 border border-gold-500/30 rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+      <button onclick="closeDetailsModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white w-8 h-8 rounded-full bg-onyx-850 flex items-center justify-center transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <div id="modalContent">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MASTER CHECKOUT & SCHEDULER DRAWER ================= -->
+  <div id="checkoutDrawerBackdrop" onclick="closeCheckoutDrawer(event)" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+    <div id="checkoutDrawer" onclick="event.stopPropagation()" class="absolute right-0 top-0 bottom-0 w-full max-w-2xl bg-onyx-950 border-l border-gold-500/25 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out">
+      
+      <!-- Drawer Top Bar -->
+      <div class="p-5 border-b border-white/10 flex items-center justify-between bg-onyx-900/80">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400">
+            <i data-lucide="home" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Agendamento em Teresina - PI</h3>
+            <span class="text-[11px] text-neutral-400">Etapa <span id="stepIndicatorNumber">1</span> de 3</span>
+          </div>
+        </div>
+
+        <button onclick="closeCheckoutDrawer(true)" class="w-9 h-9 rounded-full bg-onyx-850 hover:bg-onyx-800 text-neutral-400 hover:text-white flex items-center justify-center border border-white/5 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Step Progress Bar -->
+      <div class="grid grid-cols-3 border-b border-white/5 text-[11px] font-medium text-center">
+        <div id="stepTab1" class="py-2.5 border-b-2 border-gold-500 text-gold-400 flex items-center justify-center gap-1.5 transition-colors">
+          <span class="w-4 h-4 rounded-full bg-gold-500 text-onyx-950 text-[10px] font-bold flex items-center justify-center">1</span> Carrinho
+        </div>
+        <div id="stepTab2" class="py-2.5 border-b-2 border-transparent text-neutral-500 flex items-center justify-center gap-1.5 transition-colors">
+          <span class="w-4 h-4 rounded-full bg-onyx-800 text-neutral-400 text-[10px] font-bold flex items-center justify-center">2</span> Data & Endereço
+        </div>
+        <div id="stepTab3" class="py-2.5 border-b-2 border-transparent text-neutral-500 flex items-center justify-center gap-1.5 transition-colors">
+          <span class="w-4 h-4 rounded-full bg-onyx-800 text-neutral-400 text-[10px] font-bold flex items-center justify-center">3</span> Pagamento
+        </div>
+      </div>
+
+      <!-- Drawer Scrollable Body -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+        <!-- ================= STEP 1: CART ITEMS ================= -->
+        <div id="step1View" class="space-y-6">
+
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-gold-400"></i> Procedimentos Selecionados
+              </h4>
+              <span id="itemsCountLabel" class="text-xs text-neutral-400">0 itens</span>
+            </div>
+
+            <div id="cartItemsList" class="space-y-3">
+              <!-- Rendered via JS -->
+            </div>
+
+            <!-- Empty Cart Fallback -->
+            <div id="emptyCartMessage" class="hidden py-8 text-center bg-onyx-900/50 rounded-xl border border-dashed border-white/10">
+              <i data-lucide="shopping-bag" class="w-10 h-10 text-neutral-600 mx-auto mb-2"></i>
+              <p class="text-sm text-neutral-400">Nenhum procedimento selecionado.</p>
+              <p class="text-xs text-neutral-500 mt-1">Selecione ao menos um tratamento no catálogo para agendar a domicílio em Teresina.</p>
+            </div>
+
+            <!-- Courtesy Discount Notice if applicable -->
+            <div id="courtesyDiscountNotice" class="hidden mt-4 p-3 rounded-xl bg-gold-500/10 border border-gold-500/30 text-xs text-gold-300 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="gift" class="w-4 h-4 text-gold-400 shrink-0"></i>
+                <span>Cortesia Consulta Combinada aplicada!</span>
+              </div>
+              <span class="font-bold text-gold-400">- R$ 100,00</span>
+            </div>
+          </div>
+
+          <!-- Home Care Notice for Teresina -->
+          <div class="p-4 rounded-xl bg-onyx-900 border border-white/10 text-xs text-neutral-400 space-y-2">
+            <div class="flex items-center gap-2 text-white font-semibold">
+              <i data-lucide="map-pin" class="w-4 h-4 text-gold-400"></i> Atendimento em Qualquer Bairro de Teresina
+            </div>
+            <p>
+              Na próxima etapa você escolherá o dia e horário da visita e informará o endereço do seu imóvel em Teresina onde nossa equipe montará a maca e o kit cirúrgico.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- ================= STEP 2: DATE, TIME & ADDRESS (STRICT D+1 RULE & TERESINA CEP ONLY) ================= -->
+        <div id="step2View" class="hidden space-y-6">
+
+          <!-- SCHEDULING SECTION (D+1 RULE ENFORCED) -->
+          <div class="space-y-4">
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-200 flex items-center gap-1.5">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-gold-400"></i> 1. Escolha a Data da Visita Domiciliar
+              </h4>
+              <div class="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-300 flex items-start gap-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-400 mt-0.5"></i>
+                <span><strong>Regra de Biossegurança:</strong> Não realizamos atendimentos no mesmo dia. Os agendamentos em Teresina iniciam obrigatoriamente a partir de amanhã para a esterilização individual e preparo sob demanda do seu kit.</span>
+              </div>
+            </div>
+
+            <!-- Date Selector Cards (Strictly D+1 onwards) -->
+            <div>
+              <label class="block text-xs text-neutral-400 mb-2 font-medium">Dias Disponíveis a partir de amanhã:</label>
+              <div id="dateCardsContainer" class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                <!-- Dynamically generated with dayOffset starting at 1 (never today) -->
+              </div>
+              <input type="hidden" id="selectedDateInput" value="">
+            </div>
+
+            <!-- Time Slots -->
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs text-neutral-400 font-medium">2. Horário da Visita no Domicílio:</label>
+                <span id="selectedSlotPreview" class="text-xs text-gold-400 font-semibold">Selecione um horário</span>
+              </div>
+              <div id="timeSlotsGrid" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                <!-- Slots: 08:30, 10:00, 11:30, 14:00, 15:30, 17:00 -->
+              </div>
+              <input type="hidden" id="selectedTimeInput" value="">
+            </div>
+          </div>
+
+          <!-- PATIENT AND ADDRESS (DESTINATION RESTRICTED TO TERESINA - PI) -->
+          <div class="pt-5 border-t border-white/10 space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-200 flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gold-400"></i> 3. Endereço do Procedimento em Teresina
+              </h4>
+              <span class="text-[10px] text-gold-400 font-bold bg-gold-500/10 px-2 py-0.5 rounded border border-gold-500/30">Exclusivo Teresina - PI</span>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs text-neutral-400 mb-1">Nome Completo do Paciente *</label>
+                <input type="text" id="patientName" placeholder="Ex: Maria Clara de Sousa" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">E-mail para Confirmação *</label>
+                  <input type="email" id="patientEmail" placeholder="seuemail@exemplo.com" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">WhatsApp / Celular (DDD 86) *</label>
+                  <input type="tel" id="patientPhone" maxlength="15" oninput="maskPhone(this)" placeholder="(86) 99876-5432" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs text-neutral-400 mb-1">CPF (Prontuário e Nota Fiscal) *</label>
+                <input type="text" id="patientCpf" maxlength="14" oninput="maskCPF(this)" placeholder="000.000.000-00" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+              </div>
+
+              <!-- CEP with Strict Teresina Validation -->
+              <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">CEP em Teresina (64000 a 64099) *</label>
+                  <div class="relative">
+                    <input type="text" id="patientCep" maxlength="9" oninput="maskCEP(this)" onblur="searchCepTeresina(this.value)" placeholder="64049-550" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                    <div id="cepLoadingSpinner" class="hidden absolute right-3 top-3">
+                      <i data-lucide="loader-2" class="w-4 h-4 text-gold-400 animate-spin"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-end">
+                  <span id="cepStatusMessage" class="text-[11px] text-neutral-400 pb-2">Validação de cobertura</span>
+                </div>
+              </div>
+
+              <!-- Out of Teresina Warning Alert Box -->
+              <div id="cityRestrictionAlert" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/40 text-xs text-red-300 flex items-start gap-2">
+                <i data-lucide="map-pin-off" class="w-4 h-4 shrink-0 text-red-400 mt-0.5"></i>
+                <div>
+                  <strong class="font-semibold block">Fora da área de cobertura:</strong>
+                  Nosso atendimento domiciliar opera exclusivamente no município de <strong>Teresina - PI</strong>. Por favor, informe um endereço dentro da capital piauiense.
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-2">
+                  <label class="block text-xs text-neutral-400 mb-1">Logradouro / Rua *</label>
+                  <input type="text" id="patientStreet" placeholder="Ex: Av. Dom Severino, Rua Jóquei..." class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Número *</label>
+                  <input type="text" id="patientNumber" placeholder="1050" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Apto / Condomínio</label>
+                  <input type="text" id="patientComplement" placeholder="Apto 602, Bloco B" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Bairro em Teresina *</label>
+                  <input type="text" id="patientNeighborhood" placeholder="Jóquei, Fátima, Dirceu..." class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Cidade / UF *</label>
+                  <input type="text" id="patientCityState" value="Teresina - PI" readonly class="w-full bg-onyx-950 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-gold-400 font-semibold focus:outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= STEP 3: CHECKOUT & PAYMENT ================= -->
+        <div id="step3View" class="hidden space-y-6">
+          
+          <!-- Order Quick Recap -->
+          <div class="p-4 rounded-xl bg-onyx-900 border border-gold-500/20 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-neutral-400">Total com Kit Domiciliar em Teresina:</span>
+              <span id="paymentTotalAmount" class="text-xl font-bold text-gold-400">R$ 0,00</span>
+            </div>
+            
+            <div class="text-[11px] text-neutral-300 flex items-center gap-2 pt-1 border-t border-white/5">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-gold-400"></i>
+              <span id="recapDateTime">--/--/-- às --:--</span>
+            </div>
+
+            <div class="text-[11px] text-neutral-400 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gold-400"></i>
+              <span id="recapAddress" class="truncate">Endereço em Teresina - PI</span>
+            </div>
+          </div>
+
+          <!-- Payment Method Tabs -->
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="switchPaymentMethod('pix')" id="tabBtnPix" class="p-3.5 rounded-xl border border-gold-500 bg-gold-500/10 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="qr-code" class="w-4 h-4 text-gold-400"></i> PIX Instantâneo
+            </button>
+            <button onclick="switchPaymentMethod('card')" id="tabBtnCard" class="p-3.5 rounded-xl border border-white/10 bg-onyx-900 text-neutral-400 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="credit-card" class="w-4 h-4"></i> Cartão de Crédito
+            </button>
+          </div>
+
+          <!-- PIX PANEL -->
+          <div id="pixContainer" class="p-5 rounded-2xl bg-onyx-900 border border-white/10 text-center space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold">
+              <i data-lucide="zap" class="w-3.5 h-3.5"></i> Vaga e Rota em Teresina confirmadas instantaneamente
+            </div>
+
+            <!-- Dynamic QR Code Container -->
+            <div class="relative w-48 h-48 mx-auto bg-white p-3 rounded-2xl shadow-xl flex items-center justify-center">
+              <img id="pixQrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=00020126580014BR.GOV.BCB.PIX0136vitale-teresina-99214" alt="QR Code PIX Vitale Teresina" class="w-full h-full object-contain">
+              <div class="absolute inset-0 border-2 border-gold-500/30 rounded-2xl pointer-events-none"></div>
+            </div>
+
+            <!-- Expiration Countdown Timer -->
+            <div class="text-xs text-neutral-400">
+              O código expira em: <span id="pixTimer" class="font-bold text-gold-400">14:59</span>
+            </div>
+
+            <!-- Pix Copia e Cola -->
+            <div class="space-y-1.5 text-left">
+              <label class="block text-[11px] uppercase tracking-wider text-neutral-400">Chave PIX Copia e Cola:</label>
+              <div class="flex items-center gap-2">
+                <input type="text" id="pixCodeString" readonly value="00020126580014BR.GOV.BCB.PIX0136vitale-the-98174205204000053039865802BR5925VITALE CONCIERGE TERESINA6008TERESINA62070503***6304E8A2" class="w-full bg-onyx-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-neutral-300 font-mono select-all">
+                <button onclick="copyPixCode()" class="shrink-0 px-3 py-2 rounded-lg bg-onyx-800 hover:bg-gold-500 hover:text-onyx-950 text-gold-400 border border-gold-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar
+                </button>
+              </div>
+            </div>
+
+            <button onclick="simulateSuccessfulPayment('pix')" class="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-sm tracking-wide shadow-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+              <i data-lucide="check" class="w-4 h-4"></i> Já Fiz o PIX (Confirmar Agora)
+            </button>
+          </div>
+
+          <!-- CREDIT CARD PANEL -->
+          <div id="cardContainer" class="hidden space-y-4">
+            
+            <!-- Interactive 3D Card Preview -->
+            <div class="w-full h-44 rounded-2xl p-5 bg-gradient-to-tr from-neutral-900 via-onyx-850 to-neutral-800 border border-gold-500/40 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden">
+              <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-gold-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                  <div class="w-9 h-6 rounded bg-amber-400/80 flex items-center justify-center text-[9px] font-bold text-onyx-950 tracking-tighter">CHIP</div>
+                  <i data-lucide="wifi" class="w-4 h-4 text-gold-400"></i>
+                </div>
+                <span class="font-serif italic text-xs tracking-wider text-gold-300">VITALE CONCIERGE • THE</span>
+              </div>
+
+              <div>
+                <div id="cardPreviewNumber" class="font-mono text-base tracking-widest text-neutral-200">•••• •••• •••• ••••</div>
+              </div>
+
+              <div class="flex justify-between items-end text-xs">
+                <div>
+                  <span class="block text-[9px] uppercase tracking-wider text-neutral-400">Titular</span>
+                  <span id="cardPreviewName" class="font-medium tracking-wide text-neutral-200 uppercase truncate max-w-[170px] block">NOME NO CARTÃO</span>
+                </div>
+                <div>
+                  <span class="block text-[9px] uppercase tracking-wider text-neutral-400">Validade</span>
+                  <span id="cardPreviewExpiry" class="font-mono text-neutral-200">MM/AA</span>
+                </div>
+                <div class="w-8 h-8 rounded-full border border-gold-400/40 flex items-center justify-center text-[10px] text-gold-300 font-bold">
+                  VIP
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Inputs -->
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs text-neutral-400 mb-1">Número do Cartão</label>
+                <input type="text" id="cardNumberInput" maxlength="19" oninput="formatCardNumber(this)" placeholder="0000 0000 0000 0000" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+              </div>
+
+              <div>
+                <label class="block text-xs text-neutral-400 mb-1">Nome Impresso no Cartão</label>
+                <input type="text" id="cardNameInput" oninput="updateCardName(this.value)" placeholder="NOME COMO NO CARTÃO" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white uppercase focus:outline-none focus:border-gold-500 transition-colors">
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Validade (MM/AA)</label>
+                  <input type="text" id="cardExpiryInput" maxlength="5" oninput="formatCardExpiry(this)" placeholder="12/28" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">CVV</label>
+                  <input type="password" id="cardCvvInput" maxlength="4" placeholder="123" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs text-neutral-400 mb-1">Parcelamento</label>
+                <select id="cardInstallmentsSelect" class="w-full bg-onyx-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors">
+                  <!-- Dynamically populated -->
+                </select>
+              </div>
+
+              <button onclick="simulateSuccessfulPayment('card')" class="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-sm tracking-wide shadow-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-4">
+                <i data-lucide="lock" class="w-4 h-4"></i> Pagar e Confirmar Visita em Teresina
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ================= STEP 4: SUCCESS & WHATSAPP UNLOCKED ================= -->
+        <div id="step4View" class="hidden space-y-6">
+          
+          <div id="printReceiptArea" class="space-y-6">
+            
+            <!-- Success Status Header -->
+            <div class="text-center space-y-2">
+              <div class="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-lg">
+                <i data-lucide="check-check" class="w-8 h-8"></i>
+              </div>
+              <span class="text-xs font-semibold tracking-widest text-emerald-400 uppercase">Atendimento Confirmado em Teresina - PI</span>
+              <h3 class="font-serif text-2xl text-white font-normal">Sua Visita foi Agendada com Sucesso!</h3>
+              <p class="text-xs text-neutral-400">A maca cirúrgica portátil e o kit esterilizado descartável já estão na programação de rota da capital.</p>
+              
+              <div class="inline-block mt-2 px-4 py-1.5 rounded-lg bg-onyx-900 border border-gold-500/30 text-gold-300 font-mono text-sm font-bold tracking-wider">
+                Código: <span id="successOrderCode">#VIT-00000</span>
+              </div>
+            </div>
+
+            <!-- UNLOCKED WHATSAPP VIP CALLOUT (ONLY VISIBLE AND ACTIVE HERE) -->
+            <div class="p-5 rounded-2xl bg-gradient-to-b from-onyx-900 via-onyx-850 to-onyx-900 border-2 border-gold-500 shadow-2xl relative overflow-hidden animate-pulse-subtle">
+              <div class="absolute -right-6 -top-6 w-28 h-28 bg-gold-500/10 rounded-full blur-xl pointer-events-none"></div>
+
+              <div class="flex items-start gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                  <i data-lucide="unlock" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-gold-400 uppercase tracking-wider">Suporte Teresina Liberado</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-semibold">Desbloqueado</span>
+                  </div>
+                  <h4 class="text-sm font-bold text-white mt-0.5">Canal Direto com o Concierge THE</h4>
+                  <p class="text-xs text-neutral-300 mt-1">
+                    Pagamento confirmado! Use o botão abaixo para enviar os detalhes de acesso (portaria de condomínio, interfone) e receber as instruções prévias.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Unlocked WhatsApp CTA -->
+              <a id="whatsappDirectLink" href="#" target="_blank" class="w-full mt-3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2.5 transition-all transform hover:scale-[1.01]">
+                <i data-lucide="message-circle" class="w-5 h-5"></i>
+                Chamar no WhatsApp da Vitale Teresina
+              </a>
+            </div>
+
+            <!-- Full Appointment Recap Card -->
+            <div class="p-5 rounded-xl bg-onyx-900 border border-white/10 space-y-3 text-xs">
+              <div class="flex justify-between pb-2 border-b border-white/5">
+                <span class="text-neutral-400">Paciente:</span>
+                <span id="successPatientName" class="font-semibold text-white">--</span>
+              </div>
+              <div class="flex justify-between pb-2 border-b border-white/5">
+                <span class="text-neutral-400">Data & Horário:</span>
+                <span id="successScheduledDate" class="font-semibold text-gold-400">--</span>
+              </div>
+              <div class="flex justify-between pb-2 border-b border-white/5">
+                <span class="text-neutral-400">Endereço em Teresina:</span>
+                <span id="successAddress" class="font-medium text-neutral-200 text-right max-w-[260px]">--</span>
+              </div>
+              <div class="flex justify-between pb-2 border-b border-white/5">
+                <span class="text-neutral-400">Procedimento(s):</span>
+                <span id="successProceduresList" class="font-semibold text-white text-right max-w-[240px]">--</span>
+              </div>
+              <div class="flex justify-between pt-1 font-bold text-sm">
+                <span class="text-white">Valor Total Pago:</span>
+                <span id="successPaidAmount" class="text-gold-400">R$ 0,00</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-3">
+              <a id="googleCalendarLink" href="#" target="_blank" class="py-2.5 px-3 rounded-lg bg-onyx-900 border border-white/10 hover:border-gold-500/40 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                <i data-lucide="calendar-plus" class="w-4 h-4 text-gold-400"></i> Google Agenda
+              </a>
+              <button onclick="window.print()" class="py-2.5 px-3 rounded-lg bg-onyx-900 border border-white/10 hover:border-gold-500/40 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                <i data-lucide="printer" class="w-4 h-4 text-gold-400"></i> Imprimir Comprovante
+              </button>
+            </div>
+
+          </div>
+
+          <button onclick="resetAppAndClose()" class="w-full py-3 rounded-xl bg-onyx-900 border border-white/10 text-neutral-400 hover:text-white text-xs font-medium transition-colors">
+            Concluir e Voltar ao Início
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- Drawer Fixed Footer (Navigation between Steps 1, 2, 3) -->
+      <div id="drawerBottomActions" class="p-5 border-t border-white/10 bg-onyx-900/90 flex items-center justify-between">
+        <div>
+          <span class="block text-[10px] uppercase tracking-wider text-neutral-400">Total a Pagar</span>
+          <span id="drawerFooterTotal" class="text-lg font-bold text-gold-400">R$ 0,00</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="drawerBackBtn" onclick="handleStepBack()" class="hidden px-4 py-2.5 rounded-xl bg-onyx-800 text-neutral-300 hover:text-white text-xs font-semibold border border-white/10 transition-colors">
+            Voltar
+          </button>
+          <button id="drawerNextBtn" onclick="handleStepNext()" class="px-6 py-2.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 shadow-lg">
+            <span>Avançar para Data e Endereço</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= CUSTOM TOAST NOTIFICATIONS ================= -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+    <!-- Toasts dynamically appended -->
+  </div>
+
+  <!-- ================= JAVASCRIPT APPLICATION CORE ================= -->
+  <script>
+    /* -------------------------------------------------------------
+       1. DATA DEFINITIONS & PROCEDURES CATALOG
+       ------------------------------------------------------------- */
+    const CLINIC_CONFIG = {
+      phone: "5586999998888", // Teresina / Piauí DDD 86
+      city: "Teresina",
+      uf: "PI",
+      name: "Vitale Concierge Estética Avançada Teresina"
+    };
+
+    // Procedures list reflecting market rates, home care delivery in Teresina
+    const PROCEDURES = [
+      {
+        id: "consulta-avaliacao",
+        name: "Consulta e Avaliação Individualizada",
+        category: "facial",
+        price: 100,
+        duration: "45 min",
+        sessions: "1 sessão",
+        image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80",
+        description: "Anamnese estética minuciosa realizada no seu domicílio em Teresina, avaliação de biotipo dérmico, prescrição home care magistral e elaboração de protocolo individualizado.",
+        benefits: ["Anamnese clínica no domicílio", "Prescrição cosmecêutica individual", "Mapeamento dérmico preciso", "Cortesia de R$ 100 ao combinar com outro procedimento"]
+      },
+      {
+        id: "vitaminas-injetaveis",
+        name: "Vitaminas Injetáveis sob Demanda",
+        category: "injetaveis",
+        price: 580,
+        duration: "40 min",
+        sessions: "Shot Injetável IM/SC",
+        image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=700&q=80",
+        description: "Suplementação injetável estéril personalizada (Complexo B, Vitamina C tamponada, Biotina, Coenzima Q10 e antioxidantes) manipulada sob demanda para absorção de 100% sem perda gastrointestinal.",
+        benefits: ["Absorção biológica imediata", "Aumento de disposição e energia celular", "Fortalecimento dérmico, unhas e cabelos", "Manipulado estéril para a sua sessão"]
+      },
+      {
+        id: "enzimas-lipoliticas",
+        name: "Aplicação de Enzimas Lipolíticas (Gordura Localizada)",
+        category: "injetaveis",
+        price: 700,
+        duration: "50 min",
+        sessions: "Sessão com mescla lipolítica",
+        image: "https://images.unsplash.com/photo-1512290900672-1f02e646271a?auto=format&fit=crop&w=700&q=80",
+        description: "Infiltração de mesclas lipolíticas consagradas para quebra localizada de adipócitos resistentes (abdômen, flancos, culote ou papada) com total discrição e conforto em casa.",
+        benefits: ["Ação lipolítica concentrada", "Sem pós-operatório invasivo", "Redução visível de medidas", "Aplicação com agulhas finíssimas estéreis"]
+      },
+      {
+        id: "microagulhamento-drug",
+        name: "Microagulhamento com Drug Delivery & Fatores de Crescimento",
+        category: "facial",
+        price: 840,
+        duration: "60 min",
+        sessions: "1 sessão",
+        image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=700&q=80",
+        description: "Indução percutânea de colágeno associada à infusão de fatores de crescimento estéreis, peptídeos bioidênticos e ácido hialurônico para regeneração profunda.",
+        benefits: ["Estímulo maciço de colágeno novo", "Fechamento de poros e melhora de cicatrizes", "Atenuação de linhas e melasma", "Kit de agulhas e ponteiras 100% descartável"]
+      },
+      {
+        id: "peeling-quimico",
+        name: "Peeling Químico Magistral & Renovador Cutâneo",
+        category: "facial",
+        price: 560,
+        duration: "45 min",
+        sessions: "1 sessão",
+        image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=700&q=80",
+        description: "Aplicação de blend de ácidos magistrais biocompatíveis para esfoliação química controlada, estímulo à renovação celular e clareamento de manchas adaptado ao clima de Teresina.",
+        benefits: ["Renovação da camada córnea", "Uniformização de tom e viço acetinado", "Controle de oleosidade e comedões", "Fórmulas dermatológicas de grau médico"]
+      },
+      {
+        id: "limpeza-pele-profunda",
+        name: "Limpeza de Pele Profunda com Fototerapia LED & Alta Frequência",
+        category: "facial",
+        price: 440,
+        duration: "75 min",
+        sessions: "1 sessão",
+        image: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=700&q=80",
+        description: "Higienização profunda dos poros, emoliência biológica sem dor, extração cuidadosa de comedões, cauterização com alta frequência e banho de LED regenerativo.",
+        benefits: ["Desobstrução completa de poros", "Ação bactericida e calmante", "Luminosidade instantânea", "Finalização com sérum antioxidante"]
+      },
+      {
+        id: "drenagem-linfatica",
+        name: "Drenagem Linfática Corporal Especializada",
+        category: "corporal",
+        price: 380,
+        duration: "60 min",
+        sessions: "1 sessão",
+        image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=700&q=80",
+        description: "Manobras corporais precisas e rítmicas com óleos essenciais para drenar toxinas, desinchar o corpo, ativar a circulação e modelar suavemente.",
+        benefits: ["Redução imediata de retenção hídrica", "Alívio de peso corporal e cansaço", "Estímulo ao sistema imunológico", "Maca ergonômica montada no seu espaço"]
+      },
+      {
+        id: "hydra-gloss-lips",
+        name: "Hydra Gloss Lips / Revitalização e Nutrição Labial",
+        category: "facial",
+        price: 440,
+        duration: "45 min",
+        sessions: "1 sessão",
+        image: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=700&q=80",
+        description: "Microinfusão labial de ácido hialurônico de baixo peso molecular, pantenol e vitaminas nutritivas, devolvendo volume hídrico, viço e cor rosada natural.",
+        benefits: ["Lábios ultra-hidratados e nutridos", "Efeito gloss com brilho saudável", "Eliminação de ressecamento térmico", "Sem preenchimento volumizador ou dor"]
+      }
+    ];
+
+    /* -------------------------------------------------------------
+       2. APPLICATION STATE
+       ------------------------------------------------------------- */
+    let cart = [];
+    let currentStep = 1;
+    let selectedDate = null;
+    let selectedTime = null;
+    let selectedPayment = 'pix';
+    let pixCountdownInterval = null;
+    let activeOrder = null;
+    let isAddressInTeresina = false;
+
+    /* -------------------------------------------------------------
+       3. INITIALIZATION ON PAGE LOAD
+       ------------------------------------------------------------- */
+    window.onload = function() {
+      renderProcedures(PROCEDURES);
+      loadCartFromStorage();
+      generateAvailableDateCards(); // Strictly D+1 onwards
+      generateTimeSlots();
+      checkSavedOrder();
+      lucide.createIcons();
+    };
+
+    /* -------------------------------------------------------------
+       4. VITRINE & PROCEDURES RENDERING
+       ------------------------------------------------------------- */
+    function renderProcedures(list) {
+      const grid = document.getElementById('proceduresGrid');
+      grid.innerHTML = '';
+
+      list.forEach(proc => {
+        const card = document.createElement('div');
+        card.className = "group relative rounded-2xl bg-onyx-900 border border-white/5 hover:border-gold-500/40 p-4 transition-all duration-300 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1";
+
+        const formattedPrice = formatCurrency(proc.price);
+        const isConsulta = proc.id === 'consulta-avaliacao';
+
+        card.innerHTML = `
+          <div>
+            <!-- Image with Badges -->
+            <div class="relative w-full h-48 rounded-xl overflow-hidden mb-4 bg-onyx-850">
+              <img 
+                src="${proc.image}" 
+                alt="${proc.name}" 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onerror="this.src='https://placehold.co/600x400/121217/D4AF37?text=Vitale+Teresina'"
+              />
+              <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-onyx-950/80 backdrop-blur-md text-gold-400 border border-gold-500/30">
+                Domicílio em THE
+              </span>
+              <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-black/70 backdrop-blur-sm text-neutral-300 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3 h-3 text-gold-400"></i> ${proc.duration}
+              </span>
+            </div>
+
+            <!-- Title & Details -->
+            <h3 class="font-serif text-lg font-medium text-white mb-1.5 leading-snug line-clamp-2">${proc.name}</h3>
+            <p class="text-xs text-neutral-400 line-clamp-2 mb-3">${proc.description}</p>
+          </div>
+
+          <!-- Price & Actions -->
+          <div class="pt-3 border-t border-white/5">
+            <div class="flex items-baseline justify-between mb-3">
+              <div>
+                <span class="text-[10px] text-neutral-500 uppercase tracking-wider block">Valor da Sessão</span>
+                <span class="text-lg font-bold text-gold-400 font-sans">${formattedPrice}</span>
+              </div>
+              ${isConsulta ? '<span class="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">Cortesia c/ outro serviço</span>' : '<span class="text-[10px] text-neutral-400">Kit estéril incluso</span>'}
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="openDetailsModal('${proc.id}')" class="py-2 px-3 rounded-lg bg-onyx-850 hover:bg-onyx-800 text-neutral-300 hover:text-white text-xs font-semibold border border-white/5 transition-colors">
+                Ver Detalhes
+              </button>
+              <button onclick="addToCart('${proc.id}')" class="py-2 px-3 rounded-lg gold-gradient-bg text-onyx-950 hover:brightness-110 active:scale-95 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-1.5 shadow-md">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agendar THE
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    function filterCategory(category) {
+      const buttons = document.querySelectorAll('.filter-btn');
+      buttons.forEach(btn => {
+        btn.classList.remove('bg-gold-500', 'text-onyx-950', 'active-filter', 'shadow-md');
+        btn.classList.add('bg-onyx-850', 'text-neutral-300', 'border', 'border-white/5');
+      });
+
+      event.target.classList.remove('bg-onyx-850', 'text-neutral-300', 'border-white/5');
+      event.target.classList.add('bg-gold-500', 'text-onyx-950', 'active-filter', 'shadow-md');
+
+      if (category === 'todos') {
+        renderProcedures(PROCEDURES);
+      } else {
+        const filtered = PROCEDURES.filter(p => p.category === category);
+        renderProcedures(filtered);
+      }
+    }
+
+    /* -------------------------------------------------------------
+       5. PROCEDURE DETAIL MODAL
+       ------------------------------------------------------------- */
+    function openDetailsModal(id) {
+      const proc = PROCEDURES.find(p => p.id === id);
+      if (!proc) return;
+
+      const modal = document.getElementById('detailsModal');
+      const content = document.getElementById('modalContent');
+
+      content.innerHTML = `
+        <div class="space-y-4">
+          <div class="relative h-48 rounded-xl overflow-hidden">
+            <img src="${proc.image}" alt="${proc.name}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-onyx-950 via-transparent to-transparent"></div>
+            <span class="absolute bottom-3 left-3 text-xs font-bold text-gold-400 bg-onyx-900/90 px-3 py-1 rounded-full border border-gold-500/30">
+              ATENDIMENTO A DOMICÍLIO EM TERESINA
+            </span>
+          </div>
+
+          <div>
+            <h3 class="font-serif text-2xl text-white">${proc.name}</h3>
+            <p class="text-xs text-neutral-400 mt-1">Duração média: <span class="text-neutral-200 font-semibold">${proc.duration}</span> | Protocolo: <span class="text-neutral-200 font-semibold">${proc.sessions}</span></p>
+          </div>
+
+          <p class="text-sm text-neutral-300 leading-relaxed">${proc.description}</p>
+
+          <div class="bg-onyx-850 p-4 rounded-xl border border-white/5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gold-400 mb-2">Diferenciais e Benefícios</h4>
+            <ul class="space-y-1.5 text-xs text-neutral-300">
+              ${proc.benefits.map(b => `<li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5 text-gold-400"></i> ${b}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <div>
+              <span class="text-xs text-neutral-400 block">Valor com Kit Domiciliar</span>
+              <span class="text-2xl font-bold text-gold-400">${formatCurrency(proc.price)}</span>
+            </div>
+            <button onclick="addToCart('${proc.id}'); closeDetailsModal();" class="py-3 px-6 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center gap-2">
+              <i data-lucide="calendar-plus" class="w-4 h-4"></i> Agendar em Casa
+            </button>
+          </div>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeDetailsModal() {
+      const modal = document.getElementById('detailsModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    /* -------------------------------------------------------------
+       6. CART & COURTESY DISCOUNT CALCULATION
+       ------------------------------------------------------------- */
+    function addToCart(procId) {
+      const proc = PROCEDURES.find(p => p.id === procId);
+      if (!proc) return;
+
+      const existingIndex = cart.findIndex(item => item.id === procId);
+      if (existingIndex > -1) {
+        cart[existingIndex].quantity += 1;
+      } else {
+        cart.push({ ...proc, quantity: 1 });
+      }
+
+      saveCartToStorage();
+      updateCartUI();
+      showToast(`${proc.name} adicionado ao agendamento!`, 'success');
+    }
+
+    function updateItemQuantity(procId, delta) {
+      const idx = cart.findIndex(i => i.id === procId);
+      if (idx === -1) return;
+
+      cart[idx].quantity += delta;
+      if (cart[idx].quantity <= 0) {
+        cart.splice(idx, 1);
+        showToast("Procedimento removido.", "info");
+      }
+
+      saveCartToStorage();
+      updateCartUI();
+    }
+
+    function removeItemFromCart(procId) {
+      cart = cart.filter(i => i.id !== procId);
+      saveCartToStorage();
+      updateCartUI();
+      showToast("Procedimento removido do agendamento.", "info");
+    }
+
+    function saveCartToStorage() {
+      localStorage.setItem('vitale_the_cart', JSON.stringify(cart));
+    }
+
+    function loadCartFromStorage() {
+      const saved = localStorage.getItem('vitale_the_cart');
+      if (saved) {
+        try {
+          cart = JSON.parse(saved);
+        } catch (e) {
+          cart = [];
+        }
+      }
+      updateCartUI();
+    }
+
+    function calculateTotals() {
+      const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+      const hasConsulta = cart.some(item => item.id === 'consulta-avaliacao');
+      const hasOtherProcedure = cart.some(item => item.id !== 'consulta-avaliacao');
+
+      let discount = 0;
+      if (hasConsulta && hasOtherProcedure) {
+        discount = 100;
+      }
+
+      const total = Math.max(0, subtotal - discount);
+      return { subtotal, discount, total };
+    }
+
+    function updateCartUI() {
+      const badge = document.getElementById('cartCountBadge');
+      const headerTotal = document.getElementById('cartTotalHeader');
+      const drawerTotal = document.getElementById('drawerFooterTotal');
+      const paymentTotal = document.getElementById('paymentTotalAmount');
+      const itemsList = document.getElementById('cartItemsList');
+      const emptyMsg = document.getElementById('emptyCartMessage');
+      const itemsCountLabel = document.getElementById('itemsCountLabel');
+      const courtesyNotice = document.getElementById('courtesyDiscountNotice');
+
+      const totalCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+      const { subtotal, discount, total } = calculateTotals();
+      const formattedTotal = formatCurrency(total);
+
+      if (totalCount > 0) {
+        badge.innerText = totalCount;
+        badge.classList.remove('scale-0');
+        badge.classList.add('scale-100');
+      } else {
+        badge.classList.remove('scale-100');
+        badge.classList.add('scale-0');
+      }
+
+      headerTotal.innerText = formattedTotal;
+      drawerTotal.innerText = formattedTotal;
+      paymentTotal.innerText = formattedTotal;
+      itemsCountLabel.innerText = `${totalCount} ${totalCount === 1 ? 'procedimento' : 'procedimentos'}`;
+
+      if (discount > 0) {
+        courtesyNotice.classList.remove('hidden');
+      } else {
+        courtesyNotice.classList.add('hidden');
+      }
+
+      itemsList.innerHTML = '';
+      if (cart.length === 0) {
+        emptyMsg.classList.remove('hidden');
+      } else {
+        emptyMsg.classList.add('hidden');
+        cart.forEach(item => {
+          const itemEl = document.createElement('div');
+          itemEl.className = "flex items-center justify-between p-3 rounded-xl bg-onyx-900 border border-white/5 gap-3";
+          itemEl.innerHTML = `
+            <div class="flex items-center gap-3 min-w-0">
+              <img src="${item.image}" alt="${item.name}" class="w-12 h-12 rounded-lg object-cover shrink-0">
+              <div class="min-w-0">
+                <h5 class="text-xs font-bold text-white truncate">${item.name}</h5>
+                <span class="text-xs text-gold-400 font-semibold block">${formatCurrency(item.price)}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center border border-white/10 rounded-lg bg-onyx-950 overflow-hidden">
+                <button onclick="updateItemQuantity('${item.id}', -1)" class="px-2 py-1 text-neutral-400 hover:text-white hover:bg-onyx-800 transition-colors">
+                  <i data-lucide="minus" class="w-3 h-3"></i>
+                </button>
+                <span class="px-2 text-xs font-bold text-white">${item.quantity}</span>
+                <button onclick="updateItemQuantity('${item.id}', 1)" class="px-2 py-1 text-neutral-400 hover:text-white hover:bg-onyx-800 transition-colors">
+                  <i data-lucide="plus" class="w-3 h-3"></i>
+                </button>
+              </div>
+
+              <button onclick="removeItemFromCart('${item.id}')" class="p-1.5 text-neutral-500 hover:text-red-400 transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          `;
+          itemsList.appendChild(itemEl);
+        });
+      }
+
+      populateInstallments(total);
+      lucide.createIcons();
+    }
+
+    /* -------------------------------------------------------------
+       7. SCHEDULER ENGINE (STRICTLY D+1 ONWARDS IN TERESINA)
+       ------------------------------------------------------------- */
+    function generateAvailableDateCards() {
+      const container = document.getElementById('dateCardsContainer');
+      container.innerHTML = '';
+
+      const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+      // STRICT RULE: Same day is NEVER available! dayOffset starts at 1
+      let added = 0;
+      let dayOffset = 1; 
+
+      while (added < 7) {
+        const d = new Date();
+        d.setDate(d.getDate() + dayOffset);
+        dayOffset++;
+
+        // Exclude Sundays (day 0)
+        if (d.getDay() === 0) continue;
+
+        const dayName = daysOfWeek[d.getDay()];
+        const dayNumber = d.getDate();
+        const monthName = months[d.getMonth()];
+        const formattedDateISO = d.toISOString().split('T')[0];
+        const displayLabel = `${dayName}, ${dayNumber} de ${monthName}`;
+
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = "date-slot-card p-2.5 rounded-xl bg-onyx-900 border border-white/5 hover:border-gold-500/50 flex flex-col items-center justify-center transition-all text-center group";
+        card.setAttribute('data-date', formattedDateISO);
+        card.setAttribute('data-label', displayLabel);
+        card.onclick = () => selectDateSlot(formattedDateISO, displayLabel);
+
+        card.innerHTML = `
+          <span class="text-[10px] uppercase font-bold text-neutral-400 group-hover:text-gold-400">${dayName}</span>
+          <span class="text-base font-bold text-white my-0.5">${dayNumber}</span>
+          <span class="text-[9px] text-neutral-500">${monthName}</span>
+        `;
+
+        container.appendChild(card);
+        added++;
+      }
+    }
+
+    function selectDateSlot(isoDate, label) {
+      selectedDate = { iso: isoDate, label: label };
+      document.getElementById('selectedDateInput').value = isoDate;
+
+      document.querySelectorAll('.date-slot-card').forEach(btn => {
+        if (btn.getAttribute('data-date') === isoDate) {
+          btn.classList.add('border-gold-500', 'bg-gold-500/10', 'gold-glow');
+          btn.querySelector('span:nth-child(2)').classList.add('text-gold-400');
+        } else {
+          btn.classList.remove('border-gold-500', 'bg-gold-500/10', 'gold-glow');
+          btn.querySelector('span:nth-child(2)').classList.remove('text-gold-400');
+        }
+      });
+
+      updateDateTimePreview();
+    }
+
+    function generateTimeSlots() {
+      const times = ["08:30", "10:00", "11:30", "14:00", "15:30", "17:00"];
+      const grid = document.getElementById('timeSlotsGrid');
+      grid.innerHTML = '';
+
+      times.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = "time-slot-btn py-2.5 px-2 rounded-lg bg-onyx-900 border border-white/10 hover:border-gold-500/40 text-neutral-300 hover:text-white text-xs font-semibold transition-all";
+        btn.innerText = slot;
+        btn.onclick = () => selectTimeSlot(slot, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectTimeSlot(slot, element) {
+      selectedTime = slot;
+      document.getElementById('selectedTimeInput').value = slot;
+
+      document.querySelectorAll('.time-slot-btn').forEach(btn => {
+        btn.classList.remove('bg-gold-500', 'text-onyx-950', 'border-gold-500', 'font-bold');
+        btn.classList.add('bg-onyx-900', 'text-neutral-300');
+      });
+
+      element.classList.remove('bg-onyx-900', 'text-neutral-300');
+      element.classList.add('bg-gold-500', 'text-onyx-950', 'border-gold-500', 'font-bold');
+
+      updateDateTimePreview();
+    }
+
+    function updateDateTimePreview() {
+      const slotPreview = document.getElementById('selectedSlotPreview');
+      const recapDateTime = document.getElementById('recapDateTime');
+
+      if (selectedDate && selectedTime) {
+        const text = `${selectedDate.label} às ${selectedTime}`;
+        slotPreview.innerText = text;
+        recapDateTime.innerText = text;
+      } else if (selectedDate) {
+        slotPreview.innerText = `${selectedDate.label} (Escolha o horário)`;
+      } else {
+        slotPreview.innerText = "Selecione o dia e horário";
+      }
+    }
+
+    /* -------------------------------------------------------------
+       8. CHECKOUT DRAWER STEP NAVIGATION
+       ------------------------------------------------------------- */
+    function openCheckoutDrawer() {
+      const backdrop = document.getElementById('checkoutDrawerBackdrop');
+      const drawer = document.getElementById('checkoutDrawer');
+
+      backdrop.classList.remove('pointer-events-none', 'opacity-0');
+      backdrop.classList.add('opacity-100');
+      drawer.classList.remove('translate-x-full');
+
+      if (!selectedDate) {
+        const firstDateBtn = document.querySelector('.date-slot-card');
+        if (firstDateBtn) firstDateBtn.click();
+      }
+      if (!selectedTime) {
+        const firstTimeBtn = document.querySelector('.time-slot-btn');
+        if (firstTimeBtn) firstTimeBtn.click();
+      }
+    }
+
+    function closeCheckoutDrawer(force = false) {
+      const backdrop = document.getElementById('checkoutDrawerBackdrop');
+      const drawer = document.getElementById('checkoutDrawer');
+
+      backdrop.classList.remove('opacity-100');
+      backdrop.classList.add('opacity-0', 'pointer-events-none');
+      drawer.classList.add('translate-x-full');
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+
+      document.getElementById('step1View').classList.toggle('hidden', step !== 1);
+      document.getElementById('step2View').classList.toggle('hidden', step !== 2);
+      document.getElementById('step3View').classList.toggle('hidden', step !== 3);
+      document.getElementById('step4View').classList.toggle('hidden', step !== 4);
+
+      const updateTab = (elId, active, num) => {
+        const el = document.getElementById(elId);
+        if (active) {
+          el.className = "py-2.5 border-b-2 border-gold-500 text-gold-400 flex items-center justify-center gap-1.5 transition-colors font-semibold";
+          el.querySelector('span').className = "w-4 h-4 rounded-full bg-gold-500 text-onyx-950 text-[10px] font-bold flex items-center justify-center";
+        } else {
+          el.className = "py-2.5 border-b-2 border-transparent text-neutral-500 flex items-center justify-center gap-1.5 transition-colors";
+          el.querySelector('span').className = "w-4 h-4 rounded-full bg-onyx-800 text-neutral-400 text-[10px] font-bold flex items-center justify-center";
+        }
+      };
+
+      updateTab('stepTab1', step === 1, 1);
+      updateTab('stepTab2', step === 2, 2);
+      updateTab('stepTab3', step === 3, 3);
+
+      document.getElementById('stepIndicatorNumber').innerText = Math.min(step, 3);
+
+      const backBtn = document.getElementById('drawerBackBtn');
+      const nextBtn = document.getElementById('drawerNextBtn');
+      const bottomActions = document.getElementById('drawerBottomActions');
+
+      if (step === 1) {
+        bottomActions.classList.remove('hidden');
+        backBtn.classList.add('hidden');
+        nextBtn.innerHTML = `<span>Ir para Agendamento & Endereço THE</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+      } else if (step === 2) {
+        bottomActions.classList.remove('hidden');
+        backBtn.classList.remove('hidden');
+        nextBtn.innerHTML = `<span>Ir para Pagamento</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+      } else if (step === 3) {
+        bottomActions.classList.add('hidden');
+      } else if (step === 4) {
+        bottomActions.classList.add('hidden');
+      }
+
+      lucide.createIcons();
+    }
+
+    function handleStepNext() {
+      if (currentStep === 1) {
+        if (cart.length === 0) {
+          showToast("Adicione ao menos um procedimento ao carrinho.", "error");
+          return;
+        }
+        goToStep(2);
+      } else if (currentStep === 2) {
+        if (!selectedDate || !selectedTime) {
+          showToast("Por favor, selecione o dia e o horário da visita em Teresina.", "error");
+          return;
+        }
+        if (!validatePatientAndAddress()) {
+          return;
+        }
+
+        const street = document.getElementById('patientStreet').value;
+        const number = document.getElementById('patientNumber').value;
+        const neigh = document.getElementById('patientNeighborhood').value;
+        document.getElementById('recapAddress').innerText = `${street}, ${number} - ${neigh}, Teresina - PI`;
+
+        goToStep(3);
+        startPixTimer();
+      }
+    }
+
+    function handleStepBack() {
+      if (currentStep > 1) {
+        goToStep(currentStep - 1);
+      }
+    }
+
+    /* -------------------------------------------------------------
+       9. FORM VALIDATIONS & VIACEP (TERESINA RESTRICTION)
+       ------------------------------------------------------------- */
+    function maskPhone(input) {
+      let v = input.value.replace(/\D/g, "");
+      if (v.length > 11) v = v.substring(0, 11);
+      if (v.length > 10) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 7)}-${v.substring(7)}`;
+      } else if (v.length > 6) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2, 6)}-${v.substring(6)}`;
+      } else if (v.length > 2) {
+        input.value = `(${v.substring(0, 2)}) ${v.substring(2)}`;
+      } else {
+        input.value = v;
+      }
+    }
+
+    function maskCPF(input) {
+      let v = input.value.replace(/\D/g, "");
+      if (v.length > 11) v = v.substring(0, 11);
+      if (v.length > 9) {
+        input.value = `${v.substring(0, 3)}.${v.substring(3, 6)}.${v.substring(6, 9)}-${v.substring(9)}`;
+      } else if (v.length > 6) {
+        input.value = `${v.substring(0, 3)}.${v.substring(3, 6)}.${v.substring(6)}`;
+      } else if (v.length > 3) {
+        input.value = `${v.substring(0, 3)}.${v.substring(3)}`;
+      } else {
+        input.value = v;
+      }
+    }
+
+    function maskCEP(input) {
+      let v = input.value.replace(/\D/g, "");
+      if (v.length > 8) v = v.substring(0, 8);
+      if (v.length > 5) {
+        input.value = `${v.substring(0, 5)}-${v.substring(5)}`;
+      } else {
+        input.value = v;
+      }
+    }
+
+    async function searchCepTeresina(val) {
+      const cleanCep = val.replace(/\D/g, "");
+      const statusLabel = document.getElementById('cepStatusMessage');
+      const spinner = document.getElementById('cepLoadingSpinner');
+      const restrictionAlert = document.getElementById('cityRestrictionAlert');
+
+      if (cleanCep.length !== 8) return;
+
+      spinner.classList.remove('hidden');
+      statusLabel.innerText = "Consultando CEP em Teresina...";
+      restrictionAlert.classList.add('hidden');
+
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        const data = await response.json();
+
+        if (data.erro) {
+          statusLabel.innerText = "CEP não localizado. Preencha manualmente.";
+          statusLabel.classList.remove('text-emerald-400');
+          statusLabel.classList.add('text-amber-400');
+          isAddressInTeresina = false;
+        } else {
+          const cityNormalized = (data.localidade || '').trim().toLowerCase();
+          const ufNormalized = (data.uf || '').trim().toUpperCase();
+
+          // STRICT CHECK: Must be Teresina - PI
+          if (cityNormalized === 'teresina' && ufNormalized === 'PI') {
+            document.getElementById('patientStreet').value = data.logradouro || '';
+            document.getElementById('patientNeighborhood').value = data.bairro || '';
+            document.getElementById('patientCityState').value = "Teresina - PI";
+            
+            statusLabel.innerText = "✓ Cobertura confirmada em Teresina - PI!";
+            statusLabel.classList.remove('text-amber-400', 'text-red-400');
+            statusLabel.classList.add('text-emerald-400');
+            
+            restrictionAlert.classList.add('hidden');
+            isAddressInTeresina = true;
+            document.getElementById('patientNumber').focus();
+          } else {
+            // Outside Teresina
+            isAddressInTeresina = false;
+            statusLabel.innerText = `Localidade: ${data.localidade}/${data.uf} (Fora da área)`;
+            statusLabel.classList.remove('text-emerald-400');
+            statusLabel.classList.add('text-red-400');
+            
+            restrictionAlert.classList.remove('hidden');
+            showToast("A Vitale atende exclusivamente no município de Teresina - PI.", "error");
+          }
+        }
+      } catch (err) {
+        statusLabel.innerText = "Falha ao buscar CEP. Insira os dados.";
+      } finally {
+        spinner.classList.add('hidden');
+        lucide.createIcons();
+      }
+    }
+
+    function validatePatientAndAddress() {
+      const name = document.getElementById('patientName').value.trim();
+      const email = document.getElementById('patientEmail').value.trim();
+      const phone = document.getElementById('patientPhone').value.trim();
+      const cpf = document.getElementById('patientCpf').value.trim();
+      const cep = document.getElementById('patientCep').value.trim();
+      const street = document.getElementById('patientStreet').value.trim();
+      const number = document.getElementById('patientNumber').value.trim();
+      const neighborhood = document.getElementById('patientNeighborhood').value.trim();
+      const cleanCep = cep.replace(/\D/g, "");
+
+      if (!name || name.length < 3) {
+        showToast("Digite o nome completo do paciente.", "error");
+        document.getElementById('patientName').focus();
+        return false;
+      }
+      if (!email || !email.includes('@')) {
+        showToast("Digite um e-mail válido para a confirmação.", "error");
+        document.getElementById('patientEmail').focus();
+        return false;
+      }
+      if (!phone || phone.length < 14) {
+        showToast("Digite o celular/WhatsApp com DDD (ex: 86).", "error");
+        document.getElementById('patientPhone').focus();
+        return false;
+      }
+      if (!cpf || cpf.length < 14) {
+        showToast("Informe um CPF válido para prontuário.", "error");
+        document.getElementById('patientCpf').focus();
+        return false;
+      }
+      if (!cep || cleanCep.length !== 8) {
+        showToast("Informe o CEP residencial de Teresina.", "error");
+        document.getElementById('patientCep').focus();
+        return false;
+      }
+
+      // CEP range validation for Teresina (64000-000 to 64099-999)
+      const cepNumber = parseInt(cleanCep, 10);
+      if (cepNumber < 64000000 || cepNumber > 64099999) {
+        document.getElementById('cityRestrictionAlert').classList.remove('hidden');
+        showToast("O CEP informado está fora da cidade de Teresina - PI.", "error");
+        document.getElementById('patientCep').focus();
+        return false;
+      }
+
+      if (!street || !number || !neighborhood) {
+        showToast("Informe o endereço completo (Rua, Número e Bairro em Teresina).", "error");
+        document.getElementById('patientNumber').focus();
+        return false;
+      }
+
+      return true;
+    }
+
+    /* -------------------------------------------------------------
+       10. PAYMENT ENGINE (PIX + CREDIT CARD)
+       ------------------------------------------------------------- */
+    function switchPaymentMethod(method) {
+      selectedPayment = method;
+      const tabPix = document.getElementById('tabBtnPix');
+      const tabCard = document.getElementById('tabBtnCard');
+      const pixBox = document.getElementById('pixContainer');
+      const cardBox = document.getElementById('cardContainer');
+
+      if (method === 'pix') {
+        tabPix.className = "p-3.5 rounded-xl border border-gold-500 bg-gold-500/10 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all";
+        tabCard.className = "p-3.5 rounded-xl border border-white/10 bg-onyx-900 text-neutral-400 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition-all";
+        pixBox.classList.remove('hidden');
+        cardBox.classList.add('hidden');
+      } else {
+        tabCard.className = "p-3.5 rounded-xl border border-gold-500 bg-gold-500/10 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all";
+        tabPix.className = "p-3.5 rounded-xl border border-white/10 bg-onyx-900 text-neutral-400 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition-all";
+        cardBox.classList.remove('hidden');
+        pixBox.classList.add('hidden');
+      }
+    }
+
+    function populateInstallments(total) {
+      const select = document.getElementById('cardInstallmentsSelect');
+      select.innerHTML = '';
+
+      for (let i = 1; i <= 12; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        const installmentVal = (total / i);
+        if (i <= 3) {
+          option.innerText = `${i}x de ${formatCurrency(installmentVal)} sem juros`;
+        } else {
+          const withSmallInterest = (total * (1 + (i * 0.009))) / i;
+          option.innerText = `${i}x de ${formatCurrency(withSmallInterest)}`;
+        }
+        select.appendChild(option);
+      }
+    }
+
+    function startPixTimer() {
+      clearInterval(pixCountdownInterval);
+      let duration = 15 * 60;
+      const timerDisplay = document.getElementById('pixTimer');
+
+      pixCountdownInterval = setInterval(() => {
+        let minutes = parseInt(duration / 60, 10);
+        let seconds = parseInt(duration % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        timerDisplay.textContent = minutes + ":" + seconds;
+
+        if (--duration < 0) {
+          clearInterval(pixCountdownInterval);
+          timerDisplay.textContent = "EXPIRADO";
+          showToast("Código PIX expirado. Gere nova tentativa.", "error");
+        }
+      }, 1000);
+    }
+
+    function copyPixCode() {
+      const copyText = document.getElementById("pixCodeString");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      
+      try {
+        document.execCommand('copy');
+        showToast("Código PIX Teresina copiado com sucesso!", "success");
+      } catch (err) {
+        showToast("Não foi possível copiar automaticamente.", "info");
+      }
+    }
+
+    function formatCardNumber(input) {
+      let v = input.value.replace(/\D/g, "");
+      let formatted = "";
+      for (let i = 0; i < v.length; i++) {
+        if (i > 0 && i % 4 === 0) formatted += " ";
+        formatted += v[i];
+      }
+      input.value = formatted;
+      document.getElementById('cardPreviewNumber').innerText = formatted || "•••• •••• •••• ••••";
+    }
+
+    function updateCardName(val) {
+      document.getElementById('cardPreviewName').innerText = val.trim() || "NOME NO CARTÃO";
+    }
+
+    function formatCardExpiry(input) {
+      let v = input.value.replace(/\D/g, "");
+      if (v.length > 2) {
+        input.value = `${v.substring(0, 2)}/${v.substring(2, 4)}`;
+      } else {
+        input.value = v;
+      }
+      document.getElementById('cardPreviewExpiry').innerText = input.value || "MM/AA";
+    }
+
+    /* -------------------------------------------------------------
+       11. PAYMENT CONFIRMATION & WHATSAPP UNLOCKING (VIP GATE)
+       ------------------------------------------------------------- */
+    function simulateSuccessfulPayment(method) {
+      if (method === 'card') {
+        const num = document.getElementById('cardNumberInput').value.replace(/\s/g, '');
+        const name = document.getElementById('cardNameInput').value.trim();
+        const exp = document.getElementById('cardExpiryInput').value.trim();
+        const cvv = document.getElementById('cardCvvInput').value.trim();
+
+        if (num.length < 15 || !name || exp.length < 5 || cvv.length < 3) {
+          showToast("Preencha corretamente os dados do cartão de crédito.", "error");
+          return;
+        }
+      }
+
+      showToast("Confirmando pagamento e reservando rota em Teresina...", "info");
+
+      setTimeout(() => {
+        clearInterval(pixCountdownInterval);
+
+        const randomCode = "VIT-" + Math.floor(10000 + Math.random() * 90000);
+        const patientName = document.getElementById('patientName').value.trim();
+        const { total } = calculateTotals();
+
+        const fullAddress = `${document.getElementById('patientStreet').value.trim()}, ${document.getElementById('patientNumber').value.trim()} ${document.getElementById('patientComplement').value.trim()} - ${document.getElementById('patientNeighborhood').value.trim()} (Teresina - PI)`;
+
+        activeOrder = {
+          code: randomCode,
+          date: selectedDate.label,
+          isoDate: selectedDate.iso,
+          time: selectedTime,
+          patientName: patientName,
+          address: fullAddress,
+          items: [...cart],
+          total: total,
+          paid: true,
+          method: method,
+          city: "Teresina",
+          createdAt: new Date().toISOString()
+        };
+
+        localStorage.setItem('vitale_the_order', JSON.stringify(activeOrder));
+
+        cart = [];
+        saveCartToStorage();
+        updateCartUI();
+
+        renderSuccessView(activeOrder);
+        goToStep(4);
+        showToast("Pagamento Confirmado! Rota domiciliar garantida em Teresina.", "success");
+      }, 1200);
+    }
+
+    function renderSuccessView(order) {
+      document.getElementById('successOrderCode').innerText = `#${order.code}`;
+      document.getElementById('successPatientName').innerText = order.patientName;
+      document.getElementById('successScheduledDate').innerText = `${order.date} às ${order.time}`;
+      document.getElementById('successAddress').innerText = order.address;
+      document.getElementById('successPaidAmount').innerText = formatCurrency(order.total);
+
+      const procNames = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+      document.getElementById('successProceduresList').innerText = procNames;
+
+      // STRICTLY UNLOCKED WHATSAPP URL WITH TERESINA DETAILS (DDD 86)
+      const rawText = `Olá, equipe Concierge da Vitale Teresina!\n\nAcabei de realizar o pagamento do agendamento *#${order.code}* para ATENDIMENTO A DOMICÍLIO EM TERESINA - PI.\n\n*Dados da Visita:*\n• Paciente: ${order.patientName}\n• Data: ${order.date}\n• Horário: ${order.time}\n• Endereço: ${order.address}\n• Procedimento(s): ${procNames}\n• Total Pago: ${formatCurrency(order.total)}\n\nGostaria de receber as orientações pré-procedimento e confirmar os dados de acesso/portaria do meu condomínio.`;
+
+      const encodedMessage = encodeURIComponent(rawText);
+      const whatsappUrl = `https://wa.me/${CLINIC_CONFIG.phone}?text=${encodedMessage}`;
+      
+      const whatsappBtn = document.getElementById('whatsappDirectLink');
+      whatsappBtn.href = whatsappUrl;
+
+      // Google Calendar link
+      const cleanStartDate = order.isoDate.replace(/-/g, '') + 'T' + order.time.replace(':', '') + '00';
+      const endHour = parseInt(order.time.split(':')[0]) + 1;
+      const cleanEndDate = order.isoDate.replace(/-/g, '') + 'T' + (endHour < 10 ? '0' + endHour : endHour) + order.time.split(':')[1] + '00';
+
+      const calTitle = encodeURIComponent(`Vitale Concierge Teresina — ${procNames}`);
+      const calDetails = encodeURIComponent(`Atendimento confirmado #${order.code}. Visita no endereço: ${order.address}.`);
+      const calLocation = encodeURIComponent(order.address);
+      const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${cleanStartDate}/${cleanEndDate}&details=${calDetails}&location=${calLocation}`;
+
+      document.getElementById('googleCalendarLink').href = googleCalUrl;
+    }
+
+    function checkSavedOrder() {
+      const saved = localStorage.getItem('vitale_the_order');
+      if (saved) {
+        try {
+          activeOrder = JSON.parse(saved);
+        } catch (e) {
+          activeOrder = null;
+        }
+      }
+    }
+
+    function resetAppAndClose() {
+      closeCheckoutDrawer(true);
+      setTimeout(() => {
+        goToStep(1);
+      }, 400);
+    }
+
+    /* -------------------------------------------------------------
+       12. HELPERS & TOAST SYSTEM
+       ------------------------------------------------------------- */
+    function formatCurrency(val) {
+      return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      const bgClasses = type === 'success' 
+        ? 'bg-onyx-900 border-emerald-500/50 text-white' 
+        : type === 'error' 
+        ? 'bg-onyx-900 border-red-500/50 text-white' 
+        : 'bg-onyx-900 border-gold-500/50 text-white';
+
+      const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info';
+      const iconColor = type === 'success' ? 'text-emerald-400' : type === 'error' ? 'text-red-400' : 'text-gold-400';
+
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border ${bgClasses} shadow-2xl text-xs font-medium max-w-sm transform translate-y-4 opacity-0 transition-all duration-300`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 ${iconColor} shrink-0"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 3800);
+    }
+  </script>
+</body>
+</html>
