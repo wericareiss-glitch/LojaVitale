@@ -49,6 +49,21 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
       'Análise das queixas dérmicas e indicação de tratamentos ideais',
       'Prescrição de rotina home care diária (sem taxa de deslocamento)'
     ]
+  } : isConsulta ? {
+    ...procedure,
+    id: 'consulta-avaliacao',
+    name: 'Avaliação Facial & Corporal (Presencial)',
+    price: 100,
+    duration: '45 min',
+    sessions: 'Atendimento Presencial Domiciliar',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80',
+    description: 'Descubra o tratamento ideal para sua pele e seu corpo no conforto da sua casa. Avaliamos suas necessidades e montamos seu protocolo. (Grátis ao fechar outro procedimento!)',
+    benefits: [
+      'Atendimento com hora marcada na sua residência em Teresina',
+      'Indicação precisa do melhor tratamento para você',
+      'Maca confortável e descartáveis hospitalares inclusos',
+      'O valor de R$ 100 vira desconto no seu carrinho ao agendar outro serviço'
+    ]
   } : procedure;
 
   const handleAddToCartModal = () => {
@@ -310,7 +325,7 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
               Diferenciais e Benefícios Inclusos
             </h4>
             <ul className="space-y-1.5 text-xs text-neutral-300">
-              {procedure.benefits.map((b, i) => (
+              {effectiveProc.benefits.map((b, i) => (
                 <li key={i} className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                   <span>{b}</span>

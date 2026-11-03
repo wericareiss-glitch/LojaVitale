@@ -126,7 +126,7 @@ function pushLocalNotification(orderId: string, title: string, message: string, 
 }
 
 // Local storage procedures helpers (with cache versioning)
-const PROCEDURES_VERSION = 'v6_avaliacao_video_50';
+const PROCEDURES_VERSION = 'v7_mesclada_avaliacao_card';
 
 function getLocalProcedures(): Procedure[] {
   try {

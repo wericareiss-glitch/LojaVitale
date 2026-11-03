@@ -793,12 +793,69 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
     showToast('Código PIX Copia e Cola copiado com sucesso!', 'success');
   };
 
+  // Helper to open WhatsApp with complete order summary automatically sent to the clinic administrator (SEO telephone)
+  const sendOrderSummaryToAdminWhatsApp = (orderRefId?: string, isCompleted: boolean = false) => {
+    const adminPhone = CLINIC_CONFIG.phone || '558694484292';
+    const ref = orderRefId || completedOrder?.id || currentOrderRef || 'VIT-PEDIDO';
+    const isVideo = isOnlyVideoCall;
+    const itemsList = cart.length > 0 ? cart : (completedOrder?.items || []);
+    const patientName = patient.name || completedOrder?.patient?.name || 'Cliente';
+    const patientPhone = patient.phone || completedOrder?.patient?.phone || 'Não informado';
+    const patientCpf = patient.cpf || completedOrder?.patient?.cpf || 'Não informado';
+    const patientEmail = patient.email || completedOrder?.patient?.email || 'Não informado';
+    const dateStr = selectedDate?.fullLabel || selectedDate?.label || completedOrder?.schedule?.date || 'A combinar';
+    const timeStr = selectedTime || completedOrder?.schedule?.time || '10:30';
+    const notesStr = scheduleNotes || completedOrder?.schedule?.notes || '';
+    const subtotalVal = subtotal || completedOrder?.subtotal || 0;
+    const discountVal = discount || completedOrder?.discount || 0;
+    const shippingVal = shippingFee || completedOrder?.shippingFee || 0;
+    const totalVal = total || completedOrder?.total || 0;
+    const payMethodStr = paymentMethod === 'pix' ? 'PIX Mercado Pago' : 'Cartão de Crédito';
+    const statusStr = isCompleted ? 'CONFIRMADO / PAGO 🎉' : 'AGUARDANDO PAGAMENTO ⏳';
+
+    const lines = [
+      `🌟 *RESUMO DO PEDIDO — VITALE CONCIERGE* 🌟`,
+      `*Pedido:* #${ref}`,
+      `*Status:* ${statusStr}`,
+      ``,
+      `👤 *DADOS DO PACIENTE:*`,
+      `• *Nome:* ${patientName}`,
+      `• *WhatsApp:* ${patientPhone}`,
+      `• *CPF:* ${patientCpf}`,
+      `• *E-mail:* ${patientEmail}`,
+      ``,
+      `📅 *AGENDAMENTO:*`,
+      `• *Data:* ${dateStr}`,
+      `• *Horário:* ${timeStr}`,
+      `• *Modalidade:* ${isVideo ? '📹 Online por Videochamada' : '🏠 Atendimento Domiciliar em Teresina'}`,
+      !isVideo && patient.street ? `• *Endereço:* ${patient.street}, nº ${patient.number || ''} - Bairro ${patient.neighborhood || ''}, Teresina - PI (CEP: ${patient.cep || ''})` : null,
+      notesStr ? `• *Observações:* ${notesStr}` : null,
+      ``,
+      `📋 *PROCEDIMENTOS SOLICITADOS:*`,
+      ...itemsList.map(i => `• ${i.name} (x${i.quantity}) — ${formatCurrency(i.price * i.quantity)}`),
+      ``,
+      `💰 *RESUMO FINANCEIRO:*`,
+      `• *Subtotal:* ${formatCurrency(subtotalVal)}`,
+      discountVal > 0 ? `• *Desconto Cortesia:* - ${formatCurrency(discountVal)}` : null,
+      shippingVal > 0 ? `• *Taxa de Deslocamento:* + ${formatCurrency(shippingVal)}` : null,
+      `• *TOTAL: ${formatCurrency(totalVal)}*`,
+      `• *Forma de Pagamento:* ${payMethodStr}`,
+      ``,
+      (!isCompleted && paymentMethod === 'pix' && pixData?.qrCode) ? `🔑 *Código PIX Copia e Cola:*\n\`\`\`${pixData.qrCode}\`\`\`` : null,
+      ``,
+      `📍 _Mensagem enviada automaticamente para o Administrador (${CLINIC_CONFIG.displayPhone})_`
+    ].filter(Boolean).join('\n');
+
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(lines)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   if (!isOpen) return null;
 
   const qrImageSrc = pixData?.qrCodeBase64 
-    ? `data:image/png;base64,${pixData.qrCodeBase64}`
-    : `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        pixData?.qrCode || '00020126580014BR.GOV.BCB.PIX'
+    ? (pixData.qrCodeBase64.startsWith('data:') ? pixData.qrCodeBase64 : `data:image/png;base64,${pixData.qrCodeBase64}`)
+    : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=1&data=${encodeURIComponent(
+        pixData?.qrCode || '00020101021226350014BR.GOV.BCB.PIX0113+5586944842925204000053039865802BR5916VITALE CONCIERGE6008TERESINA62120508VITALE016304'
       )}`;
 
   const minutes = Math.floor(pixTimeRemaining / 60);
@@ -1606,13 +1663,22 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                       </div>
 
                       {/* Simulation / Instant Confirmation Helper */}
-                      <div className="pt-2 border-t border-white/5 space-y-2">
+                      <div className="pt-2 border-t border-white/5 space-y-2.5">
                         <button
                           type="button"
                           onClick={handleSimulatePixPaid}
                           className="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
                           <Check className="w-4 h-4" /> Já Fiz o PIX (Confirmar Agora)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => sendOrderSummaryToAdminWhatsApp(currentOrderRef || undefined, false)}
+                          className="w-full py-3 px-4 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                        >
+                          <MessageCircle className="w-4 h-4 text-emerald-400" />
+                          <span>Enviar Resumo ao Administrador via WhatsApp ({CLINIC_CONFIG.displayPhone})</span>
                         </button>
                       </div>
                     </>
@@ -1744,6 +1810,15 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                         </>
                       )}
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => sendOrderSummaryToAdminWhatsApp(currentOrderRef || undefined, false)}
+                      className="w-full py-3 px-4 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md mt-2"
+                    >
+                      <MessageCircle className="w-4 h-4 text-emerald-400" />
+                      <span>Enviar Resumo ao Administrador via WhatsApp ({CLINIC_CONFIG.displayPhone})</span>
+                    </button>
                   </div>
                 </form>
               )}
@@ -1812,18 +1887,15 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                     </div>
                   </div>
 
-                  {/* WhatsApp CTA with scheduled date and time included */}
-                  <a
-                    href={`https://wa.me/${CLINIC_CONFIG.phone}?text=${encodeURIComponent(
-                      `Olá, equipe Concierge da Vitale Teresina!\n\nAcabei de realizar o pagamento do agendamento *#${completedOrder.id}* via Mercado Pago para ATENDIMENTO A DOMICÍLIO EM TERESINA - PI.\n\n*Dados da Visita:*\n• Paciente: ${completedOrder.patient.name}\n• Data Agendada: ${completedOrder.schedule.date}\n• Horário Marcado: ${completedOrder.schedule.time}\n• Endereço: ${completedOrder.patient.address} (${completedOrder.patient.neighborhood}, Teresina - PI)\n• Total Pago: ${formatCurrency(completedOrder.total)}${completedOrder.schedule.notes ? `\n• Obs: ${completedOrder.schedule.notes}` : ''}\n\nGostaria de confirmar os dados de acesso/portaria e receber as orientações.`
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full mt-3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2.5 transition-all"
+                  {/* WhatsApp CTA to send complete order summary to administrator */}
+                  <button
+                    type="button"
+                    onClick={() => sendOrderSummaryToAdminWhatsApp(completedOrder.id, true)}
+                    className="w-full mt-3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2.5 transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    Chamar no WhatsApp da Vitale Teresina
-                  </a>
+                    Enviar Resumo do Pedido ao Administrador no WhatsApp ({CLINIC_CONFIG.displayPhone})
+                  </button>
                 </div>
 
                 {/* Appointment Recap */}

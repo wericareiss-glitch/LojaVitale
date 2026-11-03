@@ -34,9 +34,10 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
     }, 2000);
   };
 
-  const filtered = activeCategory === 'todos' 
+  const filtered = (activeCategory === 'todos' 
     ? procedures 
-    : procedures.filter(p => p.category === activeCategory);
+    : procedures.filter(p => p.category === activeCategory)
+  ).filter(p => p.id !== 'avaliacao-facial-video');
 
   const formatCurrency = (val: number) => {
     return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -90,22 +91,20 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
       {/* Procedures Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filtered.map(proc => {
-          const isMainConsulta = proc.id === 'consulta-avaliacao';
-          const isVideoOnly = proc.id === 'avaliacao-facial-video';
-          const isConsulta = isAvaliacaoProcedure(proc);
+          const isMainConsulta = isAvaliacaoProcedure(proc);
           const isTest = isTestProcedure(proc);
           const isSinglePrice = isSinglePricingProcedure(proc);
 
           const evalModality = consultationModalities[proc.id] || 'presencial';
-          const isCurrentVideo = isVideoOnly || (isMainConsulta && evalModality === 'video');
+          const isCurrentVideo = isMainConsulta && evalModality === 'video';
 
-          const effectivePrice = (isMainConsulta && evalModality === 'video') ? 50 : proc.price;
+          const effectivePrice = isCurrentVideo ? 50 : proc.price;
           const currentPkgType = selectedPackages[proc.id] || 'single';
           const pkgs = calculatePackages(effectivePrice);
           const activePkg = pkgs[currentPkgType] || pkgs.single;
 
           // Target procedure when adding to cart or opening modal
-          const effectiveProc: Procedure = (isMainConsulta && evalModality === 'video') ? {
+          const effectiveProc: Procedure = isCurrentVideo ? {
             ...proc,
             id: 'avaliacao-facial-video',
             name: 'Avaliação Facial por Videochamada (Online)',
@@ -120,11 +119,25 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
               'Análise das queixas dérmicas e indicação de tratamentos ideais',
               'Prescrição de rotina home care diária (sem taxa de deslocamento)'
             ]
+          } : isMainConsulta ? {
+            ...proc,
+            id: 'consulta-avaliacao',
+            name: 'Avaliação Facial & Corporal (Presencial)',
+            price: 100,
+            duration: '45 min',
+            sessions: 'Atendimento Presencial Domiciliar',
+            image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80',
+            description: 'Descubra o tratamento ideal para sua pele e seu corpo no conforto da sua casa com kit hospitalar e maca. O valor de R$ 100 vira desconto integral ao agendar outro procedimento.',
+            benefits: [
+              'Atendimento com hora marcada na sua residência em Teresina',
+              'Indicação precisa do melhor tratamento para você',
+              'Maca confortável e descartáveis hospitalares inclusos',
+              'O valor de R$ 100 vira desconto no seu carrinho ao agendar outro serviço'
+            ]
           } : proc;
 
           // Check if item or specific package is in cart
-          const itemKey = effectiveProc.id;
-          const isInCart = cartItemIds.includes(itemKey) || cartItemIds.includes(proc.id);
+          const isInCart = cartItemIds.includes(effectiveProc.id);
 
           return (
             <div
@@ -200,22 +213,6 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                       Vídeo (R$ 50)
                     </button>
                   </div>
-                ) : isVideoOnly ? (
-                  <div className="mb-3 p-2 rounded-xl bg-onyx-950 border border-blue-500/20 flex items-center justify-between text-[11px]">
-                    <span className="text-blue-300 font-medium flex items-center gap-1.5">
-                      <Video className="w-3.5 h-3.5 text-blue-400" /> Videochamada Online
-                    </span>
-                    <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded">
-                      R$ 50,00
-                    </span>
-                  </div>
-                ) : isConsulta ? (
-                  <div className="mb-3 p-2 rounded-xl bg-onyx-950 border border-gold-500/20 flex items-center justify-between text-[11px]">
-                    <span className="text-gold-300 font-medium">Diagnóstico Individualizado</span>
-                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded">
-                      Avaliação
-                    </span>
-                  </div>
                 ) : (
                   <div className="mb-3 p-1 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between gap-1 text-[10px]">
                     <button
@@ -271,7 +268,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                           ? 'Valor Simbólico de Teste' 
                           : isCurrentVideo 
                           ? 'Consulta Online por Vídeo'
-                          : isConsulta 
+                          : isMainConsulta 
                           ? 'Valor da Avaliação' 
                           : currentPkgType === 'single' 
                           ? 'Valor da Sessão' 
@@ -305,7 +302,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                     <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded flex items-center gap-1">
                       <Video className="w-2.5 h-2.5" /> Sem Frete
                     </span>
-                  ) : isConsulta ? (
+                  ) : isMainConsulta ? (
                     <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">
                       Cortesia c/ outro
                     </span>
@@ -375,7 +372,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                           className="flex items-center gap-1.5"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>{isCurrentVideo ? 'Agendar Vídeo' : isConsulta ? 'Agendar' : 'Agendar THE'}</span>
+                          <span>{isCurrentVideo ? 'Agendar Vídeo' : isMainConsulta ? 'Agendar' : 'Agendar THE'}</span>
                         </motion.span>
                       )}
                     </AnimatePresence>

@@ -3,34 +3,18 @@ import { Procedure } from '../types';
 export const PROCEDURES: Procedure[] = [
   {
     id: "consulta-avaliacao",
-    name: "Avaliação Facial & Corporal (Presencial)",
+    name: "Avaliação Facial & Corporal",
     category: "facial",
     price: 100,
-    duration: "45 min",
-    sessions: "Atendimento Presencial Domiciliar",
+    duration: "30 a 45 min",
+    sessions: "Presencial ou Videochamada Online",
     image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80",
-    description: "Descubra o tratamento ideal para sua pele e seu corpo no conforto da sua casa. Avaliamos suas necessidades e montamos seu protocolo. (Grátis ao fechar outro procedimento!)",
+    description: "Anamnese detalhada e diagnóstico individualizado. Escolha entre atendimento presencial no seu domicílio em Teresina ou consulta ao vivo por videochamada.",
     benefits: [
-      "Atendimento com hora marcada na sua residência em Teresina",
-      "Indicação precisa do melhor tratamento para você",
-      "Maca confortável e descartáveis hospitalares inclusos",
-      "O valor de R$ 100 vira desconto no seu carrinho ao agendar outro serviço"
-    ]
-  },
-  {
-    id: "avaliacao-facial-video",
-    name: "Avaliação Facial por Videochamada (Online)",
-    category: "facial",
-    price: 50,
-    duration: "30 min",
-    sessions: "Consulta Online por Vídeo",
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=700&q=80",
-    description: "Consulta diagnóstica e anamnese personalizada ao vivo por videochamada (Google Meet ou WhatsApp Vídeo). Avaliação completa da sua pele com especialista sem sair de casa.",
-    benefits: [
-      "Consulta 100% online por vídeo com especialista",
-      "Valor acessível de apenas R$ 50,00",
-      "Análise das queixas dérmicas e indicação de tratamentos ideais",
-      "Prescrição de rotina home care diária (sem taxa de deslocamento)"
+      "Modalidade Presencial: Atendimento no seu domicílio com maca e kit hospitalar (R$ 100)",
+      "Modalidade Videochamada: Consulta ao vivo por vídeo com rotina home care (R$ 50 sem frete)",
+      "Análise profunda da pele e indicação do protocolo ideal",
+      "Na opção presencial, o valor de R$ 100 vira desconto integral ao agendar outro procedimento"
     ]
   },
   {
@@ -166,6 +150,7 @@ export const PROCEDURES: Procedure[] = [
 export const CLINIC_CONFIG = {
   phone: "558694484292",
   displayPhone: "+55 (86) 9448-4292",
+  pixKey: "8b9ce82f-9368-47d5-a527-f209f79d2087",
   city: "Teresina",
   state: "PI",
   name: "Vitale Concierge Estética Avançada",
