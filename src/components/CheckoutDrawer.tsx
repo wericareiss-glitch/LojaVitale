@@ -33,7 +33,8 @@ import {
   Video,
   ExternalLink,
   AlertCircle,
-  RotateCw
+  RotateCw,
+  ChevronRight
 } from 'lucide-react';
 import { CartItem, PatientData, OrderRecord, PixPaymentData } from '../types';
 import { CLINIC_CONFIG } from '../data/procedures';
@@ -885,79 +886,198 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startStr}/${endStr}&details=${details}&location=${location}`;
   };
 
+  // Visual Progress Calculation (Carrinho > Pagamento > Confirmação)
+  const progressPercent = currentStep === 1 ? 33 : currentStep === 2 ? 55 : currentStep === 3 ? 80 : 100;
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end">
       <div className="w-full max-w-2xl bg-onyx-950 border-l border-gold-500/25 h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
         
+        {/* Continuous Glowing Progress Track at Topmost Edge */}
+        <div className="w-full h-1.5 bg-onyx-950 overflow-hidden relative">
+          <div
+            className="h-full bg-gradient-to-r from-amber-500 via-gold-400 to-emerald-400 transition-all duration-500 ease-out shadow-[0_0_12px_rgba(234,179,8,0.7)]"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+
         {/* Drawer Top Bar */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-onyx-900/80">
+        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-onyx-900/80">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400">
-              <ShoppingBag className="w-4 h-4" />
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+              currentStep === 4 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-gold-500/10 border border-gold-500/30 text-gold-400'
+            }`}>
+              {currentStep === 4 ? (
+                <Check className="w-4 h-4 stroke-[3]" />
+              ) : currentStep === 3 ? (
+                <CreditCard className="w-4 h-4" />
+              ) : (
+                <ShoppingBag className="w-4 h-4" />
+              )}
             </div>
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                Carrinho de Procedimentos • Teresina - PI
+                {currentStep === 4
+                  ? 'Agendamento Confirmado • Teresina - PI'
+                  : currentStep === 3
+                  ? 'Pagamento Seguro • Mercado Pago'
+                  : currentStep === 2
+                  ? 'Data & Horário • Visita Domiciliar'
+                  : 'Carrinho de Procedimentos • Teresina - PI'}
               </h3>
-              <span className="text-[11px] text-neutral-400">
-                Etapa {Math.min(currentStep, 3)} de 3 {currentStep === 4 ? '• Concluído' : ''}
+              <span className="text-[11px] text-neutral-400 flex items-center gap-1.5">
+                {currentStep === 1 && 'Etapa 1 de 3 • Procedimentos selecionados'}
+                {currentStep === 2 && 'Etapa 1 de 3 • Data, horário e endereço'}
+                {currentStep === 3 && 'Etapa 2 de 3 • PIX Instantâneo ou Cartão'}
+                {currentStep === 4 && <strong className="text-emerald-400">Etapa 3 de 3 • Agendamento Concluído com Sucesso 🎉</strong>}
               </span>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-onyx-850 hover:bg-onyx-800 text-neutral-400 hover:text-white flex items-center justify-center border border-white/5 transition-colors"
+            className="w-9 h-9 rounded-full bg-onyx-850 hover:bg-onyx-800 text-neutral-400 hover:text-white flex items-center justify-center border border-white/5 transition-colors cursor-pointer"
+            title="Fechar"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Progress Steps Tabs */}
-        <div className="grid grid-cols-3 border-b border-white/5 text-[11px] font-medium text-center">
-          <div
-            className={`py-2.5 border-b-2 flex items-center justify-center gap-1.5 transition-colors ${
-              currentStep === 1
-                ? 'border-gold-500 text-gold-400 font-bold'
-                : 'border-transparent text-neutral-500'
-            }`}
-          >
-            <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
-              currentStep === 1 ? 'bg-gold-500 text-onyx-950' : 'bg-onyx-800 text-neutral-400'
-            }`}>
-              1
-            </span>
-            Carrinho
-          </div>
+        {/* Visual Progress Stepper Bar (Carrinho > Pagamento > Confirmação) */}
+        <div className="bg-onyx-900/95 border-b border-white/5 px-4 sm:px-6 py-3">
+          <div className="flex items-center justify-between relative max-w-lg mx-auto">
+            
+            {/* ETAPA 1: Carrinho */}
+            <button
+              type="button"
+              onClick={() => {
+                if (currentStep === 2) setCurrentStep(1);
+                if (currentStep === 3) setCurrentStep(2);
+              }}
+              disabled={currentStep === 1 || currentStep === 4}
+              className={`flex items-center gap-2.5 text-left group transition-all ${
+                currentStep <= 2
+                  ? 'text-gold-400'
+                  : 'text-neutral-400 hover:text-white cursor-pointer'
+              }`}
+            >
+              <div
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  currentStep > 2
+                    ? 'bg-emerald-500 text-white shadow-md'
+                    : currentStep === 1 || currentStep === 2
+                    ? 'bg-gold-500 text-onyx-950 ring-4 ring-gold-500/20 shadow-md font-extrabold'
+                    : 'bg-onyx-800 text-neutral-400 border border-white/10'
+                }`}
+              >
+                {currentStep > 2 ? (
+                  <Check className="w-4 h-4 stroke-[3]" />
+                ) : (
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                )}
+              </div>
+              <div>
+                <span className={`text-xs font-bold block leading-none ${currentStep <= 2 ? 'text-white' : 'text-neutral-300'}`}>
+                  1. Carrinho
+                </span>
+                <span className="text-[10px] text-neutral-400 hidden xs:block mt-0.5">
+                  {currentStep === 1 ? 'Procedimentos' : currentStep === 2 ? 'Data & Local' : 'Concluído ✓'}
+                </span>
+              </div>
+            </button>
 
-          <div
-            className={`py-2.5 border-b-2 flex items-center justify-center gap-1.5 transition-colors ${
-              currentStep === 2
-                ? 'border-gold-500 text-gold-400 font-bold'
-                : 'border-transparent text-neutral-500'
-            }`}
-          >
-            <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
-              currentStep === 2 ? 'bg-gold-500 text-onyx-950' : 'bg-onyx-800 text-neutral-400'
-            }`}>
-              2
-            </span>
-            Data & Horário
-          </div>
+            {/* Connecting Line 1 -> 2 */}
+            <div className="flex-1 mx-2 sm:mx-4 h-1 bg-onyx-800/80 rounded-full overflow-hidden relative">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  currentStep >= 3
+                    ? 'bg-emerald-500 w-full'
+                    : currentStep === 2
+                    ? 'bg-gradient-to-r from-gold-500 to-gold-400 w-full'
+                    : 'bg-gold-500 w-1/3'
+                }`}
+              />
+            </div>
 
-          <div
-            className={`py-2.5 border-b-2 flex items-center justify-center gap-1.5 transition-colors ${
-              currentStep >= 3
-                ? 'border-gold-500 text-gold-400 font-bold'
-                : 'border-transparent text-neutral-500'
-            }`}
-          >
-            <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
-              currentStep >= 3 ? 'bg-gold-500 text-onyx-950' : 'bg-onyx-800 text-neutral-400'
-            }`}>
-              3
-            </span>
-            Mercado Pago
+            {/* ETAPA 2: Pagamento */}
+            <div
+              className={`flex items-center gap-2.5 text-left transition-all ${
+                currentStep === 3
+                  ? 'text-gold-400'
+                  : currentStep === 4
+                  ? 'text-emerald-400'
+                  : 'text-neutral-500'
+              }`}
+            >
+              <div
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  currentStep === 4
+                    ? 'bg-emerald-500 text-white shadow-md'
+                    : currentStep === 3
+                    ? 'bg-gold-500 text-onyx-950 ring-4 ring-gold-500/25 shadow-lg font-extrabold shadow-gold-500/20'
+                    : 'bg-onyx-850 text-neutral-500 border border-white/10'
+                }`}
+              >
+                {currentStep === 4 ? (
+                  <Check className="w-4 h-4 stroke-[3]" />
+                ) : (
+                  <CreditCard className="w-3.5 h-3.5" />
+                )}
+              </div>
+              <div>
+                <span className={`text-xs font-bold block leading-none ${currentStep === 3 ? 'text-white' : currentStep === 4 ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                  2. Pagamento
+                </span>
+                <span className="text-[10px] text-neutral-400 hidden xs:block mt-0.5">
+                  {currentStep === 3 ? 'Mercado Pago' : currentStep === 4 ? 'Aprovado ✓' : 'PIX / Cartão'}
+                </span>
+              </div>
+            </div>
+
+            {/* Connecting Line 2 -> 3 */}
+            <div className="flex-1 mx-2 sm:mx-4 h-1 bg-onyx-800/80 rounded-full overflow-hidden relative">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  currentStep === 4
+                    ? 'bg-emerald-500 w-full'
+                    : currentStep === 3
+                    ? 'bg-gradient-to-r from-gold-500/50 to-transparent w-1/2 animate-pulse'
+                    : 'bg-transparent w-0'
+                }`}
+              />
+            </div>
+
+            {/* ETAPA 3: Confirmação */}
+            <div
+              className={`flex items-center gap-2.5 text-left transition-all ${
+                currentStep === 4 ? 'text-emerald-400' : 'text-neutral-500'
+              }`}
+            >
+              <div
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  currentStep === 4
+                    ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/25 shadow-lg font-extrabold'
+                    : 'bg-onyx-850 text-neutral-500 border border-white/10'
+                }`}
+              >
+                {currentStep === 4 ? (
+                  <CheckCircle2 className="w-4 h-4" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+              </div>
+              <div>
+                <span className={`text-xs font-bold block leading-none ${currentStep === 4 ? 'text-white' : 'text-neutral-500'}`}>
+                  3. Confirmação
+                </span>
+                <span className="text-[10px] text-neutral-400 hidden xs:block mt-0.5">
+                  {currentStep === 4 ? 'Visita Marcada 🎉' : 'Final'}
+                </span>
+              </div>
+            </div>
+
           </div>
         </div>
 
