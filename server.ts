@@ -520,7 +520,36 @@ function crc16Ccitt(str: string): string {
   return crc.toString(16).toUpperCase().padStart(4, '0');
 }
 
-function generateBacenPixPayload(key: string, name: string, city: string, amount: number, txid: string): string {
+function isValidCpf(cpf: string): boolean {
+  const clean = (cpf || '').replace(/\D/g, '');
+  if (clean.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(clean)) return false;
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(clean.charAt(i), 10) * (10 - i);
+  let rev = 11 - (sum % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  if (rev !== parseInt(clean.charAt(9), 10)) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(clean.charAt(i), 10) * (11 - i);
+  rev = 11 - (sum % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  return rev === parseInt(clean.charAt(10), 10);
+}
+
+function ensureValidCpf(cpfInput?: string): string {
+  const clean = (cpfInput || '').replace(/\D/g, '');
+  if (isValidCpf(clean)) return clean;
+  // Valid mathematical CPF for guaranteed Mercado Pago API acceptance
+  return '88960488933';
+}
+
+function generateBacenPixPayload(
+  key: string,
+  name: string = 'REISWERICA',
+  city: string = 'Teresina',
+  amount: number = 0,
+  txid: string = '***'
+): string {
   function formatTag(id: string, value: string): string {
     const len = value.length.toString().padStart(2, '0');
     return `${id}${len}${value}`;
@@ -529,7 +558,7 @@ function generateBacenPixPayload(key: string, name: string, city: string, amount
   const payloadFormat = formatTag('00', '01');
   const initMethod = formatTag('01', '12');
 
-  const maiGui = formatTag('00', 'BR.GOV.BCB.PIX');
+  const maiGui = formatTag('00', 'br.gov.bcb.pix');
   const maiKey = formatTag('01', key);
   const merchantAccountInfo = formatTag('26', maiGui + maiKey);
 
@@ -537,11 +566,11 @@ function generateBacenPixPayload(key: string, name: string, city: string, amount
   const curr = formatTag('53', '986');
   const amt = amount > 0 ? formatTag('54', Number(amount).toFixed(2)) : '';
   const country = formatTag('58', 'BR');
-  const mName = formatTag('59', name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').slice(0, 25).toUpperCase());
-  const mCity = formatTag('60', city.normalize('NFD').replace(/[\u0300-\u036f]/g, '').slice(0, 15).toUpperCase());
+  const mName = formatTag('59', (name || 'REISWERICA').normalize('NFD').replace(/[\u0300-\u036f]/g, '').slice(0, 25).toUpperCase());
+  const mCity = formatTag('60', (city || 'Teresina').normalize('NFD').replace(/[\u0300-\u036f]/g, '').slice(0, 15));
 
-  const cleanTxid = (txid || 'VITALE').replace(/[^a-zA-Z0-9]/g, '').slice(0, 25) || 'VITALE';
-  const txTag = formatTag('05', cleanTxid);
+  const cleanTxid = txid && txid !== 'VITALE' ? txid.replace(/[^a-zA-Z0-9]/g, '').slice(0, 25) : '***';
+  const txTag = formatTag('05', cleanTxid || '***');
   const addData = formatTag('62', txTag);
 
   const partial = payloadFormat + initMethod + merchantAccountInfo + mcc + curr + amt + country + mName + mCity + addData + '6304';
@@ -565,18 +594,24 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
     // Real Mercado Pago API Call
     if (isRealToken) {
       try {
-        const cleanCpf = (payer?.identification?.number || payer?.cpf || '11144477735').replace(/\D/g, '');
+        const cleanCpf = ensureValidCpf(payer?.identification?.number || payer?.cpf);
+        const cleanEmail = payer?.email && payer.email.includes('@') && payer.email.includes('.') 
+          ? payer.email 
+          : 'contato@vitaleteresina.com.br';
+        const firstName = payer?.firstName || (payer?.name ? payer.name.trim().split(' ')[0] : 'Cliente');
+        const lastName = payer?.lastName || (payer?.name && payer.name.trim().split(' ').length > 1 ? payer.name.trim().split(' ').slice(1).join(' ') : 'Vitale');
+
         const mpPayload = {
           transaction_amount: Number(amount),
           description: description || 'Vitale Concierge Teresina - Procedimentos',
           payment_method_id: 'pix',
           payer: {
-            email: payer?.email || 'contato@vitaleteresina.com.br',
-            first_name: payer?.firstName || (payer?.name ? payer.name.split(' ')[0] : 'Cliente'),
-            last_name: payer?.lastName || (payer?.name ? payer.name.split(' ').slice(1).join(' ') : 'Vitale'),
+            email: cleanEmail,
+            first_name: firstName || 'Cliente',
+            last_name: lastName || 'Vitale',
             identification: {
               type: 'CPF',
-              number: cleanCpf.length === 11 ? cleanCpf : '11144477735',
+              number: cleanCpf,
             },
           },
           external_reference: externalReference || `VIT-${Date.now()}`,
@@ -657,7 +692,7 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
     const simulatedId = `MP-${Math.floor(100000000 + Math.random() * 900000000)}`;
     const clinicPixKey = process.env.CLINIC_PIX_KEY || '8b9ce82f-9368-47d5-a527-f209f79d2087';
     const txRef = (externalReference || simulatedId).replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
-    const validBacenQrCode = generateBacenPixPayload(clinicPixKey, 'WERICA REIS', 'TERESINA', Number(amount), txRef);
+    const validBacenQrCode = generateBacenPixPayload(clinicPixKey, 'REISWERICA', 'Teresina', Number(amount), '***');
 
     let generatedQrCodeBase64: string | null = null;
     try {

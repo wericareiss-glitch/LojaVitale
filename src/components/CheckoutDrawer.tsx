@@ -30,7 +30,10 @@ import {
   FileText,
   Navigation,
   Truck,
-  Video
+  Video,
+  ExternalLink,
+  AlertCircle,
+  RotateCw
 } from 'lucide-react';
 import { CartItem, PatientData, OrderRecord, PixPaymentData } from '../types';
 import { CLINIC_CONFIG } from '../data/procedures';
@@ -842,6 +845,8 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
       `• *Forma de Pagamento:* ${payMethodStr}`,
       ``,
       (!isCompleted && paymentMethod === 'pix' && pixData?.qrCode) ? `🔑 *Código PIX Copia e Cola:*\n\`\`\`${pixData.qrCode}\`\`\`` : null,
+      (!isCompleted && paymentMethod === 'pix' && pixData?.ticketUrl) ? `🔗 *Link da Fatura Mercado Pago:*\n${pixData.ticketUrl}` : null,
+      (!isCompleted && paymentMethod === 'pix') ? `🔑 *Chave PIX Aleatória:*\n8b9ce82f-9368-47d5-a527-f209f79d2087 (Titular: Werica Reis Sousa)` : null,
       ``,
       `📍 _Mensagem enviada automaticamente para o Administrador (${CLINIC_CONFIG.displayPhone})_`
     ].filter(Boolean).join('\n');
@@ -1619,57 +1624,120 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                     </div>
                   ) : (
                     <>
-                      {/* QR Code Box */}
-                      <div className="relative w-48 h-48 mx-auto bg-white p-3 rounded-2xl shadow-2xl flex items-center justify-center">
+                      {/* High-Resolution Clean QR Code Box */}
+                      <div className="relative w-56 h-56 mx-auto bg-white p-3.5 rounded-2xl shadow-2xl flex items-center justify-center border-2 border-gold-500/40">
                         <img
                           src={qrImageSrc}
                           alt="QR Code PIX Vitale Teresina"
                           className="w-full h-full object-contain"
                         />
-                        <div className="absolute inset-0 border-2 border-gold-500/30 rounded-2xl pointer-events-none" />
                       </div>
 
-                      {/* Countdown & Polling status */}
-                      <div className="text-xs text-neutral-400 flex items-center justify-center gap-2">
-                        <span>O código expira em:</span>
-                        <span className="font-bold text-gold-400 font-mono text-sm">{timerDisplay}</span>
-                        {isPollingStatus && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-neutral-400">
-                            • <RefreshCw className="w-3 h-3 text-gold-400 animate-spin" /> Verificando banco
-                          </span>
-                        )}
+                      {/* Expiration Timer & Regenerate Actions */}
+                      <div className="flex items-center justify-between px-2 text-xs text-neutral-400">
+                        <div className="flex items-center gap-1.5">
+                          <span>Expira em:</span>
+                          <span className="font-bold text-gold-400 font-mono text-sm">{timerDisplay}</span>
+                          {isPollingStatus && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-neutral-400 ml-1">
+                              • <RefreshCw className="w-3 h-3 text-gold-400 animate-spin" /> Verificando
+                            </span>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => generatePixPayment(currentOrderRef || undefined)}
+                          disabled={isPixGenerating}
+                          className="inline-flex items-center gap-1 text-[11px] text-gold-400 hover:text-gold-300 font-semibold px-2.5 py-1 rounded-lg bg-onyx-800 hover:bg-onyx-750 border border-gold-500/20 transition-all"
+                        >
+                          <RotateCw className={`w-3 h-3 ${isPixGenerating ? 'animate-spin' : ''}`} />
+                          <span>Gerar Novo QR Code</span>
+                        </button>
                       </div>
+
+                      {/* Official Mercado Pago Ticket URL Link */}
+                      {pixData?.ticketUrl && (
+                        <a
+                          href={pixData.ticketUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-3 px-4 rounded-xl bg-[#009EE3]/20 hover:bg-[#009EE3]/30 border border-[#009EE3]/50 text-[#009EE3] hover:text-cyan-200 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md group"
+                        >
+                          <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          <span>Pagar na Página Oficial do Mercado Pago (Fatura Web)</span>
+                        </a>
+                      )}
 
                       {/* Pix Copia e Cola */}
                       <div className="space-y-1.5 text-left">
-                        <label className="block text-[11px] uppercase tracking-wider text-neutral-400 font-medium">
-                          Chave PIX Copia e Cola:
+                        <label className="block text-[11px] uppercase tracking-wider text-neutral-400 font-semibold">
+                          Código PIX Copia e Cola:
                         </label>
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
                             readOnly
                             value={pixData?.qrCode || ''}
-                            className="w-full bg-onyx-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-neutral-300 font-mono select-all focus:outline-none"
+                            className="w-full bg-onyx-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-neutral-200 font-mono select-all focus:outline-none"
                           />
                           <button
                             type="button"
                             onClick={copyPixCode}
-                            className="shrink-0 px-3.5 py-2 rounded-xl bg-onyx-800 hover:bg-gold-500 hover:text-onyx-950 text-gold-400 border border-gold-500/30 text-xs font-bold flex items-center gap-1.5 transition-all"
+                            className="shrink-0 px-3.5 py-2 rounded-xl bg-onyx-800 hover:bg-gold-500 hover:text-onyx-950 text-gold-400 border border-gold-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                           >
                             <Copy className="w-3.5 h-3.5" /> Copiar
                           </button>
                         </div>
                       </div>
 
-                      {/* Simulation / Instant Confirmation Helper */}
+                      {/* Direct Random Key Option */}
+                      <div className="p-3 rounded-xl bg-onyx-950 border border-white/10 flex items-center justify-between gap-3 text-left">
+                        <div className="min-w-0">
+                          <span className="text-[10px] uppercase font-bold text-neutral-400 block">
+                            Chave PIX Aleatória (Mercado Pago):
+                          </span>
+                          <span className="font-mono text-gold-400 text-xs truncate block font-bold">
+                            8b9ce82f-9368-47d5-a527-f209f79d2087
+                          </span>
+                          <span className="text-[10px] text-neutral-400 block mt-0.5">
+                            Beneficiária: <strong>Werica Reis Sousa</strong> • Mercado Pago • Teresina - PI
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText('8b9ce82f-9368-47d5-a527-f209f79d2087');
+                            showToast('Chave Aleatória do Mercado Pago copiada!', 'success');
+                          }}
+                          className="shrink-0 px-3 py-1.5 rounded-lg bg-onyx-850 hover:bg-gold-500 hover:text-onyx-950 text-gold-400 border border-gold-500/30 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> Copiar Chave
+                        </button>
+                      </div>
+
+                      {/* Anti-Self Transfer Diagnostic Notice */}
+                      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-left text-[11px] text-amber-200/90 space-y-1.5 leading-relaxed">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                          <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                          <span>Dica caso o app do banco informe erro ao escanear:</span>
+                        </div>
+                        <p>
+                          • <strong>Auto-transferência bloqueada pelo BACEN:</strong> Se você estiver escaneando com a mesma conta ou aplicativo bancário onde cadastrou a chave (mesmo CPF de Werica Reis Sousa), os bancos recusam a transação por ser uma auto-transferência. Para testar com sucesso, realize o pagamento a partir de outra conta bancária (ex: Nubank, Itaú, Inter, Bradesco, BB) ou pela conta de um terceiro.
+                        </p>
+                        <p>
+                          • <strong>Alternativas imediatas:</strong> Você pode clicar no botão azul <em>Página Oficial do Mercado Pago</em> acima, transferir via <em>Chave Aleatória</em> direta, ou clicar no botão dourado <em>Já Fiz o PIX</em> para simular e aprovar o agendamento em instantes.
+                        </p>
+                      </div>
+
+                      {/* Simulation & WhatsApp Buttons */}
                       <div className="pt-2 border-t border-white/5 space-y-2.5">
                         <button
                           type="button"
                           onClick={handleSimulatePixPaid}
-                          className="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
+                          className="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          <Check className="w-4 h-4" /> Já Fiz o PIX (Confirmar Agora)
+                          <Check className="w-4 h-4 stroke-[3]" /> Já Fiz o PIX (Confirmar Agora)
                         </button>
 
                         <button

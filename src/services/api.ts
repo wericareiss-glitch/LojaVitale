@@ -7,7 +7,8 @@ import {
   PatientData,
   Procedure
 } from '../types';
-import { PROCEDURES } from '../data/procedures';
+import { PROCEDURES, CLINIC_CONFIG } from '../data/procedures';
+import { generateBacenPixPayload } from '../utils/pix';
 
 // Initial demo order for when running in static environments (GitHub Pages)
 const INITIAL_DEMO_ORDER: OrderRecord = {
@@ -211,10 +212,16 @@ export const api = {
       }
     } catch {}
 
-    // Fallback simulated PIX (runs anywhere, even on static GitHub Pages)
+    // Fallback standard BACEN PIX (runs anywhere, with valid CRC-16)
     const simulatedId = `MP-${Math.floor(100000000 + Math.random() * 900000000)}`;
-    const randomHex = Math.random().toString(36).substring(2, 10).toUpperCase();
-    const simulatedQrCode = `00020126580014BR.GOV.BCB.PIX0136vitale-teresina-${simulatedId}@mercadopago.com520400005303986540${Number(payload.amount).toFixed(2)}5802BR5925VITALE CONCIERGE TERESINA6008TERESINA62070503${randomHex}6304`;
+    const pixKey = CLINIC_CONFIG.pixKey || '8b9ce82f-9368-47d5-a527-f209f79d2087';
+    const validQrCode = generateBacenPixPayload(
+      pixKey,
+      'REISWERICA',
+      'Teresina',
+      Number(payload.amount),
+      '***'
+    );
 
     return {
       success: true,
@@ -222,7 +229,7 @@ export const api = {
       payment_id: simulatedId,
       status: 'pending',
       status_detail: 'pending_waiting_transfer',
-      qr_code: simulatedQrCode,
+      qr_code: validQrCode,
       qr_code_base64: null,
       ticket_url: null,
       amount: Number(payload.amount),

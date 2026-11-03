@@ -52,7 +52,13 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
     <main id="procedimentos" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow">
       
       {/* Header and Category Tabs */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <motion.div
+        initial={{ opacity: 0, y: 25 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
+      >
         <div>
           <div className="inline-flex items-center gap-1.5 text-gold-400 text-xs font-semibold uppercase tracking-widest mb-1">
             <Sparkles className="w-3.5 h-3.5" /> Atendimento Domiciliar em Teresina
@@ -86,11 +92,11 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Procedures Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {filtered.map(proc => {
+        {filtered.map((proc, index) => {
           const isMainConsulta = isAvaliacaoProcedure(proc);
           const isTest = isTestProcedure(proc);
           const isSinglePrice = isSinglePricingProcedure(proc);
@@ -140,9 +146,19 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
           const isInCart = cartItemIds.includes(effectiveProc.id);
 
           return (
-            <div
+            <motion.div
               key={proc.id}
-              className="group relative rounded-2xl bg-onyx-900 border border-white/5 hover:border-gold-500/40 p-4 transition-all duration-300 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-1"
+              layout
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{
+                duration: 0.55,
+                delay: (index % 4) * 0.08,
+                ease: [0.21, 0.47, 0.32, 0.98]
+              }}
+              whileHover={{ y: -6, transition: { duration: 0.25 } }}
+              className="group relative rounded-2xl bg-onyx-900 border border-white/5 hover:border-gold-500/40 p-4 transition-colors duration-300 flex flex-col justify-between hover:shadow-2xl hover:shadow-gold-500/5"
             >
               <div>
                 {/* Image */}
@@ -393,7 +409,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                   </motion.button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
