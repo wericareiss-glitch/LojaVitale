@@ -175,7 +175,7 @@ export default function App() {
       }
       return [...prev, item];
     });
-    showToast(`${item.name} adicionado ao agendamento!`, 'success');
+    showToast(`${item.name} adicionado ao carrinho!`, 'success');
   };
 
   const handleUpdateQuantity = (id: string, delta: number) => {
@@ -208,9 +208,9 @@ export default function App() {
 
   // Cart calculations
   const cartSubtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const hasConsulta = cart.some(item => item.id === 'consulta-avaliacao');
-  const hasOther = cart.some(item => item.id !== 'consulta-avaliacao');
-  const cartDiscount = (hasConsulta && hasOther) ? 100 : 0;
+  const consultaItem = cart.find(item => item.id.includes('consulta') || item.id.includes('avaliacao'));
+  const hasOther = cart.some(item => !item.id.includes('consulta') && !item.id.includes('avaliacao'));
+  const cartDiscount = (consultaItem && hasOther) ? Math.min(consultaItem.price, 100) : 0;
   const cartTotal = Math.max(0, cartSubtotal - cartDiscount);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 

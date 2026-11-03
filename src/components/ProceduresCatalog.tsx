@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Sparkles, Clock, Plus, Check, Tag } from 'lucide-react';
+import { Sparkles, Clock, Plus, Check, Tag, Video } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Procedure, PackageType } from '../types';
 import { PROCEDURES } from '../data/procedures';
-import { calculatePackages, isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure } from '../utils/packages';
+import { calculatePackages, isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure, isVideoCallProcedure } from '../utils/packages';
 
 interface ProceduresCatalogProps {
   procedures?: Procedure[];
@@ -21,6 +21,8 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>('todos');
   // Store selected package per procedure id
   const [selectedPackages, setSelectedPackages] = useState<Record<string, PackageType>>({});
+  // Store selected modality for Avaliação (Presencial R$100 vs Videochamada R$50)
+  const [consultationModalities, setConsultationModalities] = useState<Record<string, 'presencial' | 'video'>>({});
   // Track recently added procedures for smooth confirmation animation
   const [justAddedMap, setJustAddedMap] = useState<Record<string, boolean>>({});
 
@@ -88,15 +90,40 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
       {/* Procedures Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filtered.map(proc => {
+          const isMainConsulta = proc.id === 'consulta-avaliacao';
+          const isVideoOnly = proc.id === 'avaliacao-facial-video';
           const isConsulta = isAvaliacaoProcedure(proc);
           const isTest = isTestProcedure(proc);
           const isSinglePrice = isSinglePricingProcedure(proc);
+
+          const evalModality = consultationModalities[proc.id] || 'presencial';
+          const isCurrentVideo = isVideoOnly || (isMainConsulta && evalModality === 'video');
+
+          const effectivePrice = (isMainConsulta && evalModality === 'video') ? 50 : proc.price;
           const currentPkgType = selectedPackages[proc.id] || 'single';
-          const pkgs = calculatePackages(proc.price);
+          const pkgs = calculatePackages(effectivePrice);
           const activePkg = pkgs[currentPkgType] || pkgs.single;
 
+          // Target procedure when adding to cart or opening modal
+          const effectiveProc: Procedure = (isMainConsulta && evalModality === 'video') ? {
+            ...proc,
+            id: 'avaliacao-facial-video',
+            name: 'Avaliação Facial por Videochamada (Online)',
+            price: 50,
+            duration: '30 min',
+            sessions: 'Consulta Online por Vídeo',
+            image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=700&q=80',
+            description: 'Consulta diagnóstica e anamnese personalizada ao vivo por videochamada (Google Meet ou WhatsApp Vídeo). Avaliação completa da sua pele com especialista sem sair de casa.',
+            benefits: [
+              'Consulta 100% online por vídeo com especialista',
+              'Valor acessível de apenas R$ 50,00',
+              'Análise das queixas dérmicas e indicação de tratamentos ideais',
+              'Prescrição de rotina home care diária (sem taxa de deslocamento)'
+            ]
+          } : proc;
+
           // Check if item or specific package is in cart
-          const itemKey = currentPkgType === 'single' ? proc.id : `${proc.id}__${currentPkgType}`;
+          const itemKey = effectiveProc.id;
           const isInCart = cartItemIds.includes(itemKey) || cartItemIds.includes(proc.id);
 
           return (
@@ -108,33 +135,78 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                 {/* Image */}
                 <div className="relative w-full h-48 rounded-xl overflow-hidden mb-3 bg-onyx-850">
                   <img
-                    src={proc.image}
-                    alt={proc.name}
+                    src={effectiveProc.image}
+                    alt={effectiveProc.name}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80';
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-onyx-950/80 backdrop-blur-md text-gold-400 border border-gold-500/30">
-                    {isTest ? 'Ambiente Real' : 'Domicílio em THE'}
+                  <span className={`absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${
+                    isTest
+                      ? 'bg-blue-950/80 text-blue-400 border-blue-500/30'
+                      : isCurrentVideo
+                      ? 'bg-blue-950/80 text-blue-300 border-blue-400/40 flex items-center gap-1'
+                      : 'bg-onyx-950/80 text-gold-400 border border-gold-500/30'
+                  }`}>
+                    {isCurrentVideo && <Video className="w-2.5 h-2.5" />}
+                    {isTest ? 'Ambiente Real' : isCurrentVideo ? '100% Online (Vídeo)' : 'Domicílio em THE'}
                   </span>
                   <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-black/70 backdrop-blur-sm text-neutral-300 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-gold-400" /> {proc.duration}
+                    <Clock className="w-3 h-3 text-gold-400" /> {effectiveProc.duration}
                   </span>
                 </div>
 
                 {/* Title & Description */}
                 <h3 className="font-serif text-lg font-medium text-white mb-1.5 leading-snug line-clamp-2">
-                  {proc.name}
+                  {effectiveProc.name}
                 </h3>
                 <p className="text-xs text-neutral-400 line-clamp-2 mb-3 leading-relaxed">
-                  {proc.description}
+                  {effectiveProc.description}
                 </p>
 
-                {/* Pacotes Selector Tabs */}
+                {/* Pacotes / Modalidade Selector */}
                 {isTest ? (
                   <div className="mb-3 p-2 rounded-xl bg-onyx-950 border border-blue-500/20 flex items-center justify-between text-[11px]">
                     <span className="text-blue-300 font-medium">Checkout de Teste</span>
                     <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded">
                       R$ 0,01
+                    </span>
+                  </div>
+                ) : isMainConsulta ? (
+                  <div className="mb-3 p-1 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setConsultationModalities(prev => ({ ...prev, [proc.id]: 'presencial' }))}
+                      className={`flex-1 py-1.5 px-1.5 rounded-lg font-medium transition-all text-center ${
+                        evalModality === 'presencial'
+                          ? 'bg-gold-500 text-onyx-950 font-bold shadow-sm'
+                          : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      Presencial (R$ 100)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConsultationModalities(prev => ({ ...prev, [proc.id]: 'video' }))}
+                      className={`flex-1 py-1.5 px-1.5 rounded-lg font-medium transition-all text-center flex items-center justify-center gap-1 ${
+                        evalModality === 'video'
+                          ? 'bg-blue-500 text-white font-bold shadow-sm'
+                          : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <Video className="w-3 h-3" />
+                      Vídeo (R$ 50)
+                    </button>
+                  </div>
+                ) : isVideoOnly ? (
+                  <div className="mb-3 p-2 rounded-xl bg-onyx-950 border border-blue-500/20 flex items-center justify-between text-[11px]">
+                    <span className="text-blue-300 font-medium flex items-center gap-1.5">
+                      <Video className="w-3.5 h-3.5 text-blue-400" /> Videochamada Online
+                    </span>
+                    <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded">
+                      R$ 50,00
                     </span>
                   </div>
                 ) : isConsulta ? (
@@ -195,7 +267,15 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-neutral-500 uppercase tracking-wider block">
-                        {isTest ? 'Valor Simbólico de Teste' : isConsulta ? 'Valor da Avaliação' : currentPkgType === 'single' ? 'Valor da Sessão' : `${activePkg.title} (${activePkg.discountPercent}% OFF)`}
+                        {isTest 
+                          ? 'Valor Simbólico de Teste' 
+                          : isCurrentVideo 
+                          ? 'Consulta Online por Vídeo'
+                          : isConsulta 
+                          ? 'Valor da Avaliação' 
+                          : currentPkgType === 'single' 
+                          ? 'Valor da Sessão' 
+                          : `${activePkg.title} (${activePkg.discountPercent}% OFF)`}
                       </span>
                     </div>
 
@@ -206,7 +286,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                         </span>
                       )}
                       <span className="text-lg font-bold text-gold-400 font-sans">
-                        {formatCurrency(isSinglePrice ? proc.price : activePkg.finalPrice)}
+                        {formatCurrency(isSinglePrice ? effectivePrice : activePkg.finalPrice)}
                       </span>
                     </div>
 
@@ -221,6 +301,10 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                     <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded">
                       PIX / Cartão
                     </span>
+                  ) : isCurrentVideo ? (
+                    <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded flex items-center gap-1">
+                      <Video className="w-2.5 h-2.5" /> Sem Frete
+                    </span>
                   ) : isConsulta ? (
                     <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">
                       Cortesia c/ outro
@@ -234,7 +318,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => onSelectProcedure(proc, isSinglePrice ? 'single' : currentPkgType)}
+                    onClick={() => onSelectProcedure(effectiveProc, isSinglePrice ? 'single' : currentPkgType)}
                     className="py-2 px-3 rounded-xl bg-onyx-850 hover:bg-onyx-800 text-neutral-300 hover:text-white text-xs font-semibold border border-white/5 transition-colors"
                   >
                     Ver Detalhes
@@ -243,9 +327,9 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                     whileTap={{ scale: 0.93 }}
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    onClick={() => handleAddToCartWithAnim(proc, isSinglePrice ? 'single' : currentPkgType)}
+                    onClick={() => handleAddToCartWithAnim(effectiveProc, isSinglePrice ? 'single' : currentPkgType)}
                     className={`relative overflow-hidden py-2 px-2.5 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md cursor-pointer ${
-                      justAddedMap[proc.id]
+                      justAddedMap[effectiveProc.id] || justAddedMap[proc.id]
                         ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-onyx-950 shadow-emerald-500/30 shadow-lg ring-1 ring-emerald-300'
                         : isInCart
                         ? 'bg-gold-500/20 text-gold-300 border border-gold-500/40 hover:bg-gold-500/30'
@@ -253,7 +337,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                     }`}
                   >
                     <AnimatePresence mode="wait">
-                      {justAddedMap[proc.id] ? (
+                      {justAddedMap[effectiveProc.id] || justAddedMap[proc.id] ? (
                         <motion.span
                           key="just-added"
                           initial={{ opacity: 0, scale: 0.6, y: 4 }}
@@ -291,14 +375,14 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
                           className="flex items-center gap-1.5"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>{isConsulta ? 'Agendar' : 'Agendar THE'}</span>
+                          <span>{isCurrentVideo ? 'Agendar Vídeo' : isConsulta ? 'Agendar' : 'Agendar THE'}</span>
                         </motion.span>
                       )}
                     </AnimatePresence>
 
                     {/* Subtle pulse wave on addition */}
                     <AnimatePresence>
-                      {justAddedMap[proc.id] && (
+                      {(justAddedMap[effectiveProc.id] || justAddedMap[proc.id]) && (
                         <motion.span
                           key="ripple"
                           initial={{ scale: 0, opacity: 0.75 }}

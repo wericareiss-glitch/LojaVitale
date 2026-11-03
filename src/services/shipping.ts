@@ -170,9 +170,12 @@ export function calculateShippingFee(
     }
   }
 
-  // Minimum 2 km, rate is R$ 1,00 / km
-  distanceKm = Math.max(2, Math.round(distanceKm));
-  const shippingFee = Math.round(distanceKm * ORIGIN_CONFIG.ratePerKm);
+  // Distance calculation in kilometers
+  distanceKm = Math.max(1, Math.round(distanceKm));
+
+  // Isento até 5 km. Acima de 5 km: taxa somente sobre a distância excedente
+  const billableKm = Math.max(0, distanceKm - 5);
+  const shippingFee = Math.round(billableKm * ORIGIN_CONFIG.ratePerKm);
 
   return {
     originCep: ORIGIN_CONFIG.cep,
@@ -183,6 +186,8 @@ export function calculateShippingFee(
     ratePerKm: ORIGIN_CONFIG.ratePerKm,
     shippingFee,
     isWithinTeresina: isTeresinaCep,
-    message: `${distanceKm} km da base (CEP ${ORIGIN_CONFIG.cep}) • R$ ${ORIGIN_CONFIG.ratePerKm.toFixed(2)}/km`,
+    message: shippingFee === 0 
+      ? 'Atendimento domiciliar em Teresina' 
+      : `Deslocamento: R$ ${shippingFee.toFixed(2)}`,
   };
 }

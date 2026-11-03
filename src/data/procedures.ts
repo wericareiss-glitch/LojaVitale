@@ -3,18 +3,34 @@ import { Procedure } from '../types';
 export const PROCEDURES: Procedure[] = [
   {
     id: "consulta-avaliacao",
-    name: "Avaliação Facial & Corporal (Personalizada)",
+    name: "Avaliação Facial & Corporal (Presencial)",
     category: "facial",
     price: 100,
     duration: "45 min",
-    sessions: "Avaliação diagnóstica",
+    sessions: "Atendimento Presencial Domiciliar",
     image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80",
     description: "Descubra o tratamento ideal para sua pele e seu corpo no conforto da sua casa. Avaliamos suas necessidades e montamos seu protocolo. (Grátis ao fechar outro procedimento!)",
     benefits: [
-      "Atendimento com hora marcada na sua residência",
+      "Atendimento com hora marcada na sua residência em Teresina",
       "Indicação precisa do melhor tratamento para você",
       "Maca confortável e descartáveis hospitalares inclusos",
       "O valor de R$ 100 vira desconto no seu carrinho ao agendar outro serviço"
+    ]
+  },
+  {
+    id: "avaliacao-facial-video",
+    name: "Avaliação Facial por Videochamada (Online)",
+    category: "facial",
+    price: 50,
+    duration: "30 min",
+    sessions: "Consulta Online por Vídeo",
+    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=700&q=80",
+    description: "Consulta diagnóstica e anamnese personalizada ao vivo por videochamada (Google Meet ou WhatsApp Vídeo). Avaliação completa da sua pele com especialista sem sair de casa.",
+    benefits: [
+      "Consulta 100% online por vídeo com especialista",
+      "Valor acessível de apenas R$ 50,00",
+      "Análise das queixas dérmicas e indicação de tratamentos ideais",
+      "Prescrição de rotina home care diária (sem taxa de deslocamento)"
     ]
   },
   {

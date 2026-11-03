@@ -29,13 +29,14 @@ import {
   CalendarCheck,
   FileText,
   Navigation,
-  Truck
+  Truck,
+  Video
 } from 'lucide-react';
 import { CartItem, PatientData, OrderRecord, PixPaymentData } from '../types';
 import { CLINIC_CONFIG } from '../data/procedures';
 import { api } from '../services/api';
 import { calculateShippingFee, ORIGIN_CONFIG, ShippingCalculation } from '../services/shipping';
-import { isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure } from '../utils/packages';
+import { isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure, isVideoCallProcedure } from '../utils/packages';
 
 interface CheckoutDrawerProps {
   isOpen: boolean;
@@ -268,19 +269,21 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
   // Cart totals calculation including Shipping Fee (R$ 1,00 por KM da base 64099-000)
   const calculateTotals = () => {
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const hasConsulta = cart.some(item => item.id.includes('consulta-avaliacao'));
-    const hasOther = cart.some(item => !item.id.includes('consulta-avaliacao'));
+    const consultaItem = cart.find(item => item.id.includes('consulta') || item.id.includes('avaliacao'));
+    const hasOther = cart.some(item => !item.id.includes('consulta') && !item.id.includes('avaliacao'));
     let discount = 0;
-    if (hasConsulta && hasOther) {
-      discount = 100;
+    if (consultaItem && hasOther) {
+      discount = Math.min(consultaItem.price, 100);
     }
-    const shippingFee = shipping?.shippingFee || 0;
-    const shippingDistanceKm = shipping?.distanceKm || 0;
+    const isOnlyVideoCall = cart.length > 0 && cart.every(i => i.id.includes('video') || i.name.toLowerCase().includes('videochamada'));
+    const shippingFee = isOnlyVideoCall ? 0 : (shipping?.shippingFee || 0);
+    const shippingDistanceKm = isOnlyVideoCall ? 0 : (shipping?.distanceKm || 0);
     const total = Math.max(0, subtotal - discount + shippingFee);
     return { subtotal, discount, shippingFee, shippingDistanceKm, total };
   };
 
   const { subtotal, discount, shippingFee, shippingDistanceKm, total } = calculateTotals();
+  const isOnlyVideoCall = cart.length > 0 && cart.every(i => isVideoCallProcedure(i));
 
   // Set default time if unset and free
   useEffect(() => {
@@ -301,13 +304,19 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
   // PIX Countdown Timer
   useEffect(() => {
     let timer: any;
-    if (currentStep === 3 && paymentMethod === 'pix' && pixTimeRemaining > 0) {
+    if (currentStep === 3 && paymentMethod === 'pix') {
       timer = setInterval(() => {
-        setPixTimeRemaining(prev => Math.max(0, prev - 1));
+        setPixTimeRemaining(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [currentStep, paymentMethod, pixTimeRemaining]);
+  }, [currentStep, paymentMethod]);
 
   // Polling for PIX status
   useEffect(() => {
@@ -444,7 +453,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
 
           const calc = calculateShippingFee(cleanCep, neighborhood);
           setShipping(calc);
-          setCepStatus(`✓ Cobertura THE: ${calc.distanceKm} km (Frete: R$ ${calc.shippingFee.toFixed(2)})`);
+          setCepStatus('✓ Atendimento domiciliar confirmado em Teresina');
           setIsOutOfCoverage(false);
         } else {
           setCepStatus(`Localidade: ${data.localidade}/${data.uf} (Fora da área)`);
@@ -529,20 +538,22 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
       showToast('Informe um CPF válido (11 dígitos) para o prontuário.', 'error');
       return false;
     }
-    const cleanCep = patient.cep.replace(/\D/g, "");
-    if (cleanCep.length !== 8) {
-      showToast('Informe um CEP válido de Teresina.', 'error');
-      return false;
-    }
-    const cepNum = parseInt(cleanCep, 10);
-    if (cepNum < 64000000 || cepNum > 64099999 || isOutOfCoverage) {
-      setIsOutOfCoverage(true);
-      showToast('O endereço informado fica fora de Teresina - PI.', 'error');
-      return false;
-    }
-    if (!patient.street.trim() || !patient.number.trim() || !patient.neighborhood.trim()) {
-      showToast('Informe a rua, número e bairro do domicílio.', 'error');
-      return false;
+    if (!isOnlyVideoCall) {
+      const cleanCep = patient.cep.replace(/\D/g, "");
+      if (cleanCep.length !== 8) {
+        showToast('Informe um CEP válido de Teresina.', 'error');
+        return false;
+      }
+      const cepNum = parseInt(cleanCep, 10);
+      if (cepNum < 64000000 || cepNum > 64099999 || isOutOfCoverage) {
+        setIsOutOfCoverage(true);
+        showToast('O endereço informado fica fora de Teresina - PI.', 'error');
+        return false;
+      }
+      if (!patient.street.trim() || !patient.number.trim() || !patient.neighborhood.trim()) {
+        showToast('Informe a rua, número e bairro do domicílio.', 'error');
+        return false;
+      }
     }
     return true;
   };
@@ -824,7 +835,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                Agendamento Domiciliar em Teresina - PI
+                Carrinho de Procedimentos • Teresina - PI
               </h3>
               <span className="text-[11px] text-neutral-400">
                 Etapa {Math.min(currentStep, 3)} de 3 {currentStep === 4 ? '• Concluído' : ''}
@@ -906,7 +917,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
               {cart.length === 0 ? (
                 <div className="py-12 text-center bg-onyx-900/50 rounded-2xl border border-dashed border-white/10 space-y-2">
                   <ShoppingBag className="w-12 h-12 text-neutral-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-neutral-300">Seu agendamento está vazio</p>
+                  <p className="text-sm font-semibold text-neutral-300">Seu carrinho está vazio</p>
                   <p className="text-xs text-neutral-500 max-w-xs mx-auto">
                     Selecione os procedimentos estéticos desejados no catálogo para atendimento a domicílio em Teresina.
                   </p>
@@ -1305,126 +1316,136 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                     />
                   </div>
 
-                  {/* CEP with Teresina Validation */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-neutral-400 mb-1">CEP em Teresina (64000 a 64099) *</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={patient.cep}
-                          onChange={(e) => handleCepChange(e.target.value)}
-                          placeholder="64049-550"
-                          className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
-                        />
-                        {isCepLoading && (
-                          <div className="absolute right-3 top-2.5">
-                            <Loader2 className="w-4 h-4 text-gold-400 animate-spin" />
+                  {/* Address or Video Call Consultation Details */}
+                  {isOnlyVideoCall ? (
+                    <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 space-y-2.5">
+                      <div className="flex items-center gap-2 text-blue-300 font-bold text-xs uppercase tracking-wider">
+                        <Video className="w-4 h-4 text-blue-400" />
+                        Consulta Online por Videochamada
+                      </div>
+                      <p className="text-xs text-neutral-300 leading-relaxed">
+                        Atendimento 100% digital. O link exclusivo do Google Meet / WhatsApp Vídeo será enviado diretamente para seu WhatsApp <strong className="text-white">{patient.phone || 'cadastrado'}</strong> e para o e-mail cadastrado. Não há necessidade de deslocamento físico ou preenchimento de endereço residencial.
+                      </p>
+                      <div className="text-[11px] text-blue-300/80 flex items-center gap-2 pt-2 border-t border-blue-500/20">
+                        <span>✓ Sem taxa de frete</span>
+                        <span>•</span>
+                        <span>✓ Atendimento no conforto de onde você estiver</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* CEP with Teresina Validation */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-400 mb-1">CEP em Teresina (64000 a 64099) *</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={patient.cep}
+                              onChange={(e) => handleCepChange(e.target.value)}
+                              placeholder="64049-550"
+                              className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
+                            />
+                            {isCepLoading && (
+                              <div className="absolute right-3 top-2.5">
+                                <Loader2 className="w-4 h-4 text-gold-400 animate-spin" />
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
+                        <div className="flex items-end pb-2">
+                          <span className={`text-[11px] ${
+                            cepStatus.includes('✓') 
+                              ? 'text-emerald-400 font-semibold' 
+                              : isOutOfCoverage 
+                              ? 'text-red-400 font-semibold' 
+                              : 'text-neutral-400'
+                          }`}>
+                            {cepStatus}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-end pb-2">
-                      <span className={`text-[11px] ${
-                        cepStatus.includes('✓') 
-                          ? 'text-emerald-400 font-semibold' 
-                          : isOutOfCoverage 
-                          ? 'text-red-400 font-semibold' 
-                          : 'text-neutral-400'
-                      }`}>
-                        {cepStatus}
-                      </span>
-                    </div>
-                  </div>
 
-                  {isOutOfCoverage && (
-                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
-                      <div>
-                        <strong>Fora da área de cobertura:</strong> O atendimento domiciliar opera exclusivamente em Teresina - PI.
+                      {isOutOfCoverage && (
+                        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+                          <div>
+                            <strong>Fora da área de cobertura:</strong> O atendimento domiciliar opera exclusivamente em Teresina - PI.
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="col-span-2">
+                          <label className="block text-xs text-neutral-400 mb-1">Logradouro / Rua *</label>
+                          <input
+                            type="text"
+                            value={patient.street}
+                            onChange={(e) => setPatient({ ...patient, street: e.target.value })}
+                            placeholder="Ex: Av. Dom Severino, Rua Jóquei..."
+                            className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-400 mb-1">Número *</label>
+                          <input
+                            type="text"
+                            value={patient.number}
+                            onChange={(e) => setPatient({ ...patient, number: e.target.value })}
+                            placeholder="1050"
+                            className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
+                          />
+                        </div>
                       </div>
-                    </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-400 mb-1">Apto / Condomínio</label>
+                          <input
+                            type="text"
+                            value={patient.complement || ''}
+                            onChange={(e) => setPatient({ ...patient, complement: e.target.value })}
+                            placeholder="Apto 602, Bloco B"
+                            className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-400 mb-1">Bairro em Teresina *</label>
+                          <input
+                            type="text"
+                            value={patient.neighborhood}
+                            onChange={(e) => setPatient({ ...patient, neighborhood: e.target.value })}
+                            placeholder="Jóquei, Fátima, Dirceu..."
+                            className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-400 mb-1">Cidade / UF *</label>
+                          <input
+                            type="text"
+                            value="Teresina - PI"
+                            readOnly
+                            className="w-full bg-onyx-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-gold-400 font-bold focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2">
-                      <label className="block text-xs text-neutral-400 mb-1">Logradouro / Rua *</label>
-                      <input
-                        type="text"
-                        value={patient.street}
-                        onChange={(e) => setPatient({ ...patient, street: e.target.value })}
-                        placeholder="Ex: Av. Dom Severino, Rua Jóquei..."
-                        className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Número *</label>
-                      <input
-                        type="text"
-                        value={patient.number}
-                        onChange={(e) => setPatient({ ...patient, number: e.target.value })}
-                        placeholder="1050"
-                        className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Apto / Condomínio</label>
-                      <input
-                        type="text"
-                        value={patient.complement || ''}
-                        onChange={(e) => setPatient({ ...patient, complement: e.target.value })}
-                        placeholder="Apto 602, Bloco B"
-                        className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Bairro em Teresina *</label>
-                      <input
-                        type="text"
-                        value={patient.neighborhood}
-                        onChange={(e) => setPatient({ ...patient, neighborhood: e.target.value })}
-                        placeholder="Jóquei, Fátima, Dirceu..."
-                        className="w-full bg-onyx-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Cidade / UF *</label>
-                      <input
-                        type="text"
-                        value="Teresina - PI"
-                        readOnly
-                        className="w-full bg-onyx-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-gold-400 font-bold focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Frete / Taxa de Deslocamento Concierge (R$ 1,00 por KM a partir do CEP 64099-000) */}
-                  <div className="p-3.5 rounded-xl bg-onyx-900 border border-gold-500/25 space-y-2">
-                    <div className="flex items-center justify-between">
+                  {/* Taxa de Deslocamento Concierge (ocultada se isenta até 5km) */}
+                  {shippingFee > 0 && (
+                    <div className="p-3.5 rounded-xl bg-onyx-900 border border-gold-500/25 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Truck className="w-4 h-4 text-gold-400" />
                         <span className="text-xs font-bold text-white uppercase tracking-wider">
-                          Taxa de Deslocamento Concierge
+                          Taxa de Deslocamento
                         </span>
                       </div>
                       <span className="text-sm font-extrabold text-gold-400 font-sans">
                         {formatCurrency(shippingFee)}
                       </span>
                     </div>
-
-                    <div className="text-[11px] text-neutral-300 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1.5 border-t border-white/5">
-                      <span className="flex items-center gap-1 text-neutral-400">
-                        <Navigation className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-                        Ponto de partida: <strong>CEP {ORIGIN_CONFIG.cep}</strong> ({ORIGIN_CONFIG.address})
-                      </span>
-                      <span className="text-gold-300 font-semibold">
-                        {shippingDistanceKm} km até seu domicílio • R$ {ORIGIN_CONFIG.ratePerKm.toFixed(2)}/km
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -1448,13 +1469,15 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                       <span className="font-semibold">- {formatCurrency(discount)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center text-gold-300">
-                    <span className="flex items-center gap-1">
-                      <Truck className="w-3.5 h-3.5 text-gold-400" />
-                      Frete ({shippingDistanceKm} km da base 64099-000 • R$ 1/km):
-                    </span>
-                    <span className="font-semibold text-gold-400">+ {formatCurrency(shippingFee)}</span>
-                  </div>
+                  {shippingFee > 0 && (
+                    <div className="flex justify-between items-center text-gold-300">
+                      <span className="flex items-center gap-1">
+                        <Truck className="w-3.5 h-3.5 text-gold-400" />
+                        Taxa de Deslocamento:
+                      </span>
+                      <span className="font-semibold text-gold-400">+ {formatCurrency(shippingFee)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-between items-center pt-1">
@@ -1841,7 +1864,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                         <Truck className="w-3.5 h-3.5 text-gold-400" /> Taxa de Deslocamento:
                       </span>
                       <span className="font-semibold text-gold-300">
-                        {formatCurrency(completedOrder.shippingFee)} ({completedOrder.shippingDistanceKm || 0} km de CEP 64099-000)
+                        {formatCurrency(completedOrder.shippingFee)}
                       </span>
                     </div>
                   )}

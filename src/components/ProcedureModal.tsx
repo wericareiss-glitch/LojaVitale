@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { X, Check, CalendarPlus, Sparkles, Tag, ShieldCheck } from 'lucide-react';
+import { X, Check, CalendarPlus, Sparkles, Tag, ShieldCheck, Video } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Procedure, PackageType } from '../types';
-import { calculatePackages, isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure } from '../utils/packages';
+import { calculatePackages, isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure, isVideoCallProcedure } from '../utils/packages';
 
 interface ProcedureModalProps {
   procedure: Procedure | null;
@@ -17,18 +17,43 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
 }) => {
   const [selectedPackage, setSelectedPackage] = useState<PackageType>('single');
   const [isJustAdded, setIsJustAdded] = useState(false);
+  const [evalModality, setEvalModality] = useState<'presencial' | 'video'>(() => {
+    if (procedure?.id === 'avaliacao-facial-video') return 'video';
+    return 'presencial';
+  });
 
   if (!procedure) return null;
 
   const isConsulta = isAvaliacaoProcedure(procedure);
+  const isVideoDirect = isVideoCallProcedure(procedure);
+  const isVideo = isVideoDirect || (isConsulta && evalModality === 'video');
   const isTest = isTestProcedure(procedure);
   const isSinglePrice = isSinglePricingProcedure(procedure);
-  const packages = calculatePackages(procedure.price);
+
+  const effectivePrice = isVideo ? 50 : procedure.price;
+  const packages = calculatePackages(effectivePrice);
   const currentPkg = packages[selectedPackage] || packages.single;
+
+  const effectiveProc: Procedure = isVideo ? {
+    ...procedure,
+    id: 'avaliacao-facial-video',
+    name: 'Avaliação Facial por Videochamada (Online)',
+    price: 50,
+    duration: '30 min',
+    sessions: 'Consulta Online por Vídeo',
+    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=700&q=80',
+    description: 'Consulta diagnóstica e anamnese personalizada ao vivo por videochamada (Google Meet ou WhatsApp Vídeo). Avaliação completa da sua pele com especialista sem sair de casa.',
+    benefits: [
+      'Consulta 100% online por vídeo com especialista',
+      'Valor acessível de apenas R$ 50,00',
+      'Análise das queixas dérmicas e indicação de tratamentos ideais',
+      'Prescrição de rotina home care diária (sem taxa de deslocamento)'
+    ]
+  } : procedure;
 
   const handleAddToCartModal = () => {
     setIsJustAdded(true);
-    onAddToCart(procedure, isSinglePrice ? 'single' : selectedPackage);
+    onAddToCart(effectiveProc, isSinglePrice ? 'single' : selectedPackage);
     setTimeout(() => {
       setIsJustAdded(false);
       onClose();
@@ -52,28 +77,38 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
         <div className="space-y-4">
           <div className="relative h-52 rounded-xl overflow-hidden">
             <img
-              src={procedure.image}
-              alt={procedure.name}
+              src={effectiveProc.image}
+              alt={effectiveProc.name}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80';
+              }}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-onyx-950 via-transparent to-transparent" />
-            <span className="absolute bottom-3 left-3 text-xs font-bold text-gold-400 bg-onyx-900/90 px-3 py-1 rounded-full border border-gold-500/30">
-              ATENDIMENTO A DOMICÍLIO EM TERESINA
+            <span className={`absolute bottom-3 left-3 text-xs font-bold px-3 py-1 rounded-full border backdrop-blur-md ${
+              isTest
+                ? 'text-blue-400 bg-blue-950/90 border-blue-500/30'
+                : isVideo
+                ? 'text-blue-300 bg-blue-950/90 border-blue-400/40 flex items-center gap-1.5'
+                : 'text-gold-400 bg-onyx-900/90 border-gold-500/30'
+            }`}>
+              {isVideo && <Video className="w-3 h-3" />}
+              {isTest ? 'AMBIENTE DE TESTE REAL' : isVideo ? 'CONSULTA ONLINE POR VIDEOCHAMADA' : 'ATENDIMENTO A DOMICÍLIO EM TERESINA'}
             </span>
           </div>
 
           <div>
-            <h3 className="font-serif text-2xl text-white">{procedure.name}</h3>
+            <h3 className="font-serif text-2xl text-white">{effectiveProc.name}</h3>
             <p className="text-xs text-neutral-400 mt-1">
-              Duração média: <span className="text-neutral-200 font-semibold">{procedure.duration}</span>
+              Duração média: <span className="text-neutral-200 font-semibold">{effectiveProc.duration}</span>
               {!isConsulta && (
-                <> | Protocolo: <span className="text-neutral-200 font-semibold">{procedure.sessions}</span></>
+                <> | Protocolo: <span className="text-neutral-200 font-semibold">{effectiveProc.sessions}</span></>
               )}
             </p>
           </div>
 
           <p className="text-xs text-neutral-300 leading-relaxed">
-            {procedure.description}
+            {effectiveProc.description}
           </p>
 
           {/* Pacotes Promocionais: Ocultado para Avaliação e Teste */}
@@ -89,14 +124,71 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
               </div>
             </div>
           ) : isConsulta ? (
-            <div className="p-4 rounded-xl bg-onyx-850 border border-gold-500/30 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-white block">Avaliação Individualizada</span>
-                <span className="text-[11px] text-neutral-400">Atendimento domiciliar exclusivo com diagnóstico completo</span>
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-bold text-gold-400 block">{formatCurrency(procedure.price)}</span>
-                <span className="text-[10px] text-emerald-400 font-semibold">Valor abatido ao fechar outro serviço</span>
+            <div className="space-y-3 pt-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-gold-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Escolha a Modalidade da Avaliação
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Opção 1: Presencial a Domicílio */}
+                <button
+                  type="button"
+                  onClick={() => setEvalModality('presencial')}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                    evalModality === 'presencial'
+                      ? 'border-gold-500 bg-gold-500/15 shadow-md ring-1 ring-gold-500/50'
+                      : 'border-white/10 bg-onyx-850 hover:border-gold-500/30 text-neutral-300'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white">Presencial a Domicílio</span>
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                        Em Teresina
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 leading-relaxed mb-2">
+                      Anamnese completa com especialista, kit descartável hospitalar e maca no seu domicílio.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-white/5 flex items-baseline justify-between">
+                    <span className="text-base font-extrabold text-gold-400 font-sans">
+                      {formatCurrency(100)}
+                    </span>
+                    <span className="text-[9px] text-neutral-400">Cortesia c/ outro serviço</span>
+                  </div>
+                </button>
+
+                {/* Opção 2: Videochamada Online */}
+                <button
+                  type="button"
+                  onClick={() => setEvalModality('video')}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                    evalModality === 'video'
+                      ? 'border-blue-500 bg-blue-500/15 shadow-md ring-1 ring-blue-500/50'
+                      : 'border-white/10 bg-onyx-850 hover:border-blue-500/30 text-neutral-300'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Video className="w-3.5 h-3.5 text-blue-400" /> Videochamada Online
+                      </span>
+                      <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">
+                        100% Online
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 leading-relaxed mb-2">
+                      Consulta ao vivo pelo Google Meet ou WhatsApp Vídeo. Análise da pele e prescrição home care.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-white/5 flex items-baseline justify-between">
+                    <span className="text-base font-extrabold text-blue-400 font-sans">
+                      {formatCurrency(50)}
+                    </span>
+                    <span className="text-[9px] text-blue-300">Sem frete</span>
+                  </div>
+                </button>
               </div>
             </div>
           ) : (
@@ -230,7 +322,7 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
           <div className="flex items-center justify-between pt-3 border-t border-white/5">
             <div>
               <span className="text-[11px] text-neutral-400 block">
-                {isTest ? 'Valor Simbólico de Teste' : isConsulta ? 'Valor da Avaliação' : selectedPackage === 'single' ? 'Valor da Sessão Avulsa' : `${currentPkg.title} (${currentPkg.discountPercent}% OFF)`}
+                {isTest ? 'Valor Simbólico de Teste' : isVideo ? 'Consulta Online por Vídeo' : isConsulta ? 'Valor da Avaliação' : selectedPackage === 'single' ? 'Valor da Sessão Avulsa' : `${currentPkg.title} (${currentPkg.discountPercent}% OFF)`}
               </span>
               <div className="flex items-baseline gap-2">
                 {!isSinglePrice && selectedPackage !== 'single' && (
@@ -238,8 +330,8 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
                     {formatCurrency(currentPkg.originalPrice)}
                   </span>
                 )}
-                <span className="text-2xl font-bold text-gold-400 font-sans">
-                  {formatCurrency(isSinglePrice ? procedure.price : currentPkg.finalPrice)}
+                <span className={`text-2xl font-bold font-sans ${isVideo ? 'text-blue-400' : 'text-gold-400'}`}>
+                  {formatCurrency(isSinglePrice ? effectivePrice : currentPkg.finalPrice)}
                 </span>
               </div>
             </div>
@@ -282,7 +374,17 @@ export const ProcedureModal: React.FC<ProcedureModalProps> = ({
                     className="flex items-center gap-2"
                   >
                     <CalendarPlus className="w-4 h-4" /> 
-                    <span>{isTest ? 'Adicionar Teste (R$ 0,01)' : isConsulta ? 'Agendar Avaliação' : selectedPackage === 'single' ? 'Agendar em Casa' : `Agendar ${currentPkg.title}`}</span>
+                    <span>
+                      {isTest 
+                        ? 'Adicionar Teste (R$ 0,01)' 
+                        : isVideo 
+                        ? 'Agendar Videochamada (R$ 50)' 
+                        : isConsulta 
+                        ? 'Agendar Avaliação Presencial (R$ 100)' 
+                        : selectedPackage === 'single' 
+                        ? 'Agendar em Casa' 
+                        : `Agendar ${currentPkg.title}`}
+                    </span>
                   </motion.span>
                 )}
               </AnimatePresence>

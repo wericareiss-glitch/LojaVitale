@@ -449,7 +449,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <input
                     type="number"
                     min="0"
-                    step="10"
+                    step="0.01"
                     required
                     value={formData.price ?? ''}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}

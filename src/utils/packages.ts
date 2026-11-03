@@ -121,6 +121,19 @@ export function isAvaliacaoProcedure(proc?: { id?: string; name?: string } | nul
   );
 }
 
+export function isVideoCallProcedure(proc?: { id?: string; name?: string } | null): boolean {
+  if (!proc) return false;
+  const id = (proc.id || '').toLowerCase();
+  const name = (proc.name || '').toLowerCase();
+  return (
+    id === 'avaliacao-facial-video' ||
+    id.includes('video') ||
+    name.includes('videochamada') ||
+    name.includes('video chamada') ||
+    name.includes('vídeo')
+  );
+}
+
 export function isSinglePricingProcedure(proc?: { id?: string; name?: string; price?: number } | null): boolean {
   return isAvaliacaoProcedure(proc) || isTestProcedure(proc);
 }

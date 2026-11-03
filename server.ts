@@ -257,8 +257,8 @@ async function sendOrderSummaryEmails(order: Order): Promise<{ success: boolean;
     .join('\n');
 
   const shippingInfoText = (order.shippingFee !== undefined && order.shippingFee > 0)
-    ? `Taxa de Deslocamento Concierge: ${formatCurrency(order.shippingFee)} (${order.shippingDistanceKm || 0} km a partir do CEP 64099-000)`
-    : 'Taxa de Deslocamento: Grátis / Inclusa';
+    ? `Taxa de Deslocamento: ${formatCurrency(order.shippingFee)}`
+    : 'Taxa de Deslocamento: Inclusa';
 
   const fullSummary = `
 ==============================================
@@ -1055,18 +1055,22 @@ app.post('/api/orders', (req: Request, res: Response) => {
     ordersStore.set(orderId, newOrder);
 
     // Create initial notification
+    const locationLabel = newOrder.patient?.neighborhood ? `${newOrder.patient.neighborhood}, Teresina` : 'Online / Domiciliar';
     pushNotification(
       orderId,
       `Novo Pedido #${orderId} Registrado`,
-      `Agendamento para ${newOrder.schedule.date} às ${newOrder.schedule.time} (${newOrder.patient.neighborhood}, Teresina). Total: R$ ${newOrder.total.toFixed(2)}.`,
+      `Agendamento para ${newOrder.schedule.date} às ${newOrder.schedule.time} (${locationLabel}). Total: R$ ${newOrder.total.toFixed(2)}.`,
       'info'
     );
 
     if (paymentStatus === 'aprovado') {
+      const isOnline = newOrder.items.some(i => i.id === 'avaliacao-facial-video');
       pushNotification(
         orderId,
         `Pagamento Aprovado! 🎉`,
-        `O agendamento #${orderId} está confirmado. Maleta estéril e rota reservadas.`,
+        isOnline
+          ? `O agendamento #${orderId} está confirmado. Link da videochamada reservado para a data/horário.`
+          : `O agendamento #${orderId} está confirmado. Maleta estéril e rota reservadas.`,
         'success'
       );
       sendOrderSummaryEmails(newOrder).catch(err => console.error('[Email Dispatch error]', err));
@@ -1253,7 +1257,7 @@ app.post('/api/admin/login', (req: Request, res: Response) => {
   const pass = (password || '').toString().trim();
 
   // Defined credentials: login "werica", password "q8wwpqo5"
-  const isValidUser = user === 'werica' || user === 'werica@vitale.com.br';
+  const isValidUser = user === 'werica' || user === 'wericareiss@gmail.com' || user === 'werica@vitale.com.br';
   const isValidPass = pass === 'q8wwpqo5';
 
   if (isValidUser && isValidPass) {

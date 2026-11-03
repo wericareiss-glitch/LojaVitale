@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </AnimatePresence>
               </div>
               <span className="text-xs uppercase tracking-wider hidden sm:inline">
-                Agendamento
+                Carrinho
               </span>
               <span className="text-xs font-black">
                 {formatCurrency(cartTotal)}
