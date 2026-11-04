@@ -103,6 +103,8 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
   const [isPixGenerating, setIsPixGenerating] = useState(false);
   const [pixTimeRemaining, setPixTimeRemaining] = useState(15 * 60);
   const [isPollingStatus, setIsPollingStatus] = useState(false);
+  const [isVerifyingPix, setIsVerifyingPix] = useState(false);
+  const [lastCheckMessage, setLastCheckMessage] = useState<string | null>(null);
 
   // Card form state
   const [cardNumber, setCardNumber] = useState('');
@@ -780,14 +782,28 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
     showToast('Pagamento Confirmado no Mercado Pago! Resumo enviado por e-mail.', 'success');
   };
 
-  const handleSimulatePixPaid = async () => {
+  const handleVerifyPixPayment = async (silent: boolean = false) => {
     if (!pixData?.paymentId) return;
+    if (!silent) setIsVerifyingPix(true);
     try {
-      showToast('Simulando confirmação bancária do PIX...', 'info');
-      await api.simulateStatus(pixData.paymentId, 'aprovado');
-      await handlePaymentApproved('pix', pixData.paymentId, 'PIX confirmado pelo teste do usuário');
+      const res = await api.checkPaymentStatus(pixData.paymentId);
+      if (res.is_approved || res.status === 'approved' || res.status === 'accredited') {
+        showToast('Pagamento PIX confirmado com sucesso no Mercado Pago!', 'success');
+        setLastCheckMessage('Pagamento Aprovado!');
+        await handlePaymentApproved('pix', pixData.paymentId, 'PIX compensado e aprovado no Mercado Pago');
+      } else {
+        const msg = 'Pagamento ainda não identificado no Mercado Pago. O PIX pode levar alguns segundos para compensar. Realize o pagamento pelo app do seu banco e clique em verificar novamente.';
+        setLastCheckMessage('Aguardando compensação no banco...');
+        if (!silent) {
+          showToast(msg, 'info');
+        }
+      }
     } catch {
-      showToast('Erro ao simular aprovação.', 'error');
+      if (!silent) {
+        showToast('Não foi possível consultar o Mercado Pago agora. Tente novamente em instantes.', 'error');
+      }
+    } finally {
+      if (!silent) setIsVerifyingPix(false);
     }
   };
 
@@ -1836,29 +1852,51 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                         </button>
                       </div>
 
-                      {/* Anti-Self Transfer Diagnostic Notice */}
+                      {/* Real-time Payment Status & Instructions */}
                       <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-left text-[11px] text-amber-200/90 space-y-1.5 leading-relaxed">
                         <div className="flex items-center gap-1.5 font-bold text-amber-300">
                           <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                          <span>Dica caso o app do banco informe erro ao escanear:</span>
+                          <span>Confirmação e Liberação do Agendamento:</span>
                         </div>
                         <p>
-                          • <strong>Auto-transferência bloqueada pelo BACEN:</strong> Se você estiver escaneando com a mesma conta ou aplicativo bancário onde cadastrou a chave (mesmo CPF de Werica Reis Sousa), os bancos recusam a transação por ser uma auto-transferência. Para testar com sucesso, realize o pagamento a partir de outra conta bancária (ex: Nubank, Itaú, Inter, Bradesco, BB) ou pela conta de um terceiro.
+                          • <strong>Verificação Automática:</strong> O sistema consulta o Mercado Pago a cada 3 segundos. Assim que o pagamento for concluído no app do seu banco, a próxima página com o comprovante do agendamento será liberada automaticamente.
                         </p>
                         <p>
-                          • <strong>Alternativas imediatas:</strong> Você pode clicar no botão azul <em>Página Oficial do Mercado Pago</em> acima, transferir via <em>Chave Aleatória</em> direta, ou clicar no botão dourado <em>Já Fiz o PIX</em> para simular e aprovar o agendamento em instantes.
+                          • <strong>Verificação Manual:</strong> Você pode clicar a qualquer momento no botão dourado <em>"Verificar Pagamento no Banco"</em> abaixo para forçar a verificação imediata da compensação.
+                        </p>
+                        <p>
+                          • <strong>Atenção BACEN:</strong> Se o app do banco recusar a leitura por auto-transferência (mesmo titular da conta de destino), realize o pagamento através de outra instituição bancária (ex: Nubank, Itaú, Bradesco, Inter, BB) ou abra a <em>Página Oficial do Mercado Pago</em>.
                         </p>
                       </div>
 
-                      {/* Simulation & WhatsApp Buttons */}
+                      {/* Real Payment Verification & WhatsApp Buttons */}
                       <div className="pt-2 border-t border-white/5 space-y-2.5">
                         <button
                           type="button"
-                          onClick={handleSimulatePixPaid}
-                          className="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          onClick={() => handleVerifyPixPayment(false)}
+                          disabled={isVerifyingPix}
+                          className="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                         >
-                          <Check className="w-4 h-4 stroke-[3]" /> Já Fiz o PIX (Confirmar Agora)
+                          {isVerifyingPix ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-onyx-950" />
+                              <span>Consultando Mercado Pago...</span>
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="w-4 h-4 text-onyx-950" />
+                              <span>Verificar Pagamento no Banco</span>
+                            </>
+                          )}
                         </button>
+
+                        <div className="flex items-center justify-center gap-2 text-[11px] text-neutral-400 py-0.5">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          <span>{lastCheckMessage || 'Monitorando compensação do PIX no banco a cada 3s...'}</span>
+                        </div>
 
                         <button
                           type="button"

@@ -9,6 +9,7 @@ export const PROCEDURES: Procedure[] = [
     duration: "30 a 45 min",
     sessions: "Presencial ou Videochamada Online",
     image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80",
+    badge: "Mais Procurado",
     description: "Anamnese detalhada e diagnóstico individualizado. Escolha entre atendimento presencial no seu domicílio em Teresina ou consulta ao vivo por videochamada.",
     benefits: [
       "Modalidade Presencial: Atendimento no seu domicílio com maca e kit hospitalar (R$ 100)",
@@ -25,6 +26,7 @@ export const PROCEDURES: Procedure[] = [
     duration: "50 min",
     sessions: "Sessão com enzimas ativas",
     image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80",
+    badge: "Mais Procurado",
     description: "Redução de gordura localizada sem cortes e sem cirurgia. Aplicação direta onde você mais quer perder: barriga, flancos, culote, costas ou papada.",
     benefits: [
       "Afina a silhueta e quebra a gordura teimosa",
@@ -57,6 +59,7 @@ export const PROCEDURES: Procedure[] = [
     duration: "75 min",
     sessions: "1 sessão completa",
     image: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=700&q=80",
+    badge: "Promoção",
     description: "Pele renovada, lisinha e livre de cravos! Higienização completa sem dor, controle de oleosidade e banho de luz LED calmante para tirar qualquer vermelhidão.",
     benefits: [
       "Eliminação profunda de cravos e impurezas dos poros",
@@ -73,6 +76,7 @@ export const PROCEDURES: Procedure[] = [
     duration: "60 min",
     sessions: "1 sessão",
     image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=700&q=80",
+    badge: "Destaque",
     description: "Tratamento potente para clarear manchinhas de sol ou espinhas, suavizar linhas de expressão e devolver o colágeno e a firmeza da pele jovem.",
     benefits: [
       "Estímulo intenso de colágeno natural da sua pele",
@@ -105,6 +109,7 @@ export const PROCEDURES: Procedure[] = [
     duration: "60 min",
     sessions: "1 sessão",
     image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=700&q=80",
+    badge: "Promoção",
     description: "Massagem suave e especializada para eliminar a retenção de líquidos, desinchar o corpo todo e aliviar a sensação de peso nas pernas e abdômen.",
     benefits: [
       "Desinchaço imediato e sensação de leveza corporal",
@@ -154,5 +159,7 @@ export const CLINIC_CONFIG = {
   city: "Teresina",
   state: "PI",
   name: "Vitale Concierge Estética Avançada",
+  instagramUrl: "https://www.instagram.com/_wericareis/",
+  instagramHandle: "@_wericareis",
 };
 

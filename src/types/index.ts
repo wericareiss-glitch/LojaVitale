@@ -13,6 +13,7 @@ export interface Procedure {
   image: string;
   description: string;
   benefits: string[];
+  badge?: 'Mais Procurado' | 'Promoção' | 'Destaque' | 'Exclusivo' | string;
 }
 
 export interface CartItem extends Procedure {

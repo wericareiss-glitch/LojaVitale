@@ -1,9 +1,10 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import { PROCEDURES } from './src/data/procedures.ts';
 import { Procedure } from './src/types/index.ts';
 import QRCode from 'qrcode';
@@ -16,7 +17,18 @@ dotenv.config({ override: true });
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-app.use(express.json());
+// Protect against oversized JSON buffer overflow / denial of service
+app.use(express.json({ limit: '1mb' }));
+
+// OWASP Recommended Security Headers
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), payment=*');
+  next();
+});
 
 // ==========================================
 // DATA MODELS & TYPES
@@ -436,10 +448,104 @@ function syncOrderPaymentStatus(paymentId: string, newStatus: OrderStatus, detai
 // ==========================================
 // SECURITY & PRIVACY: ADMIN AUTH & DATA MASKING (LGPD)
 // ==========================================
+interface AdminSession {
+  token: string;
+  username: string;
+  createdAt: number;
+  expiresAt: number;
+  ip: string;
+}
+const activeAdminSessions = new Map<string, AdminSession>();
+
+function createAdminSession(username: string, ip: string): string {
+  const token = `vtl_${crypto.randomBytes(32).toString('hex')}`;
+  const now = Date.now();
+  // Valid for 8 hours
+  activeAdminSessions.set(token, {
+    token,
+    username,
+    createdAt: now,
+    expiresAt: now + (8 * 3600 * 1000),
+    ip,
+  });
+  return token;
+}
+
 function isAdminRequest(req: Request): boolean {
-  const token = req.headers['x-admin-token'] || 
+  const rawToken = req.headers['x-admin-token'] || 
     (typeof req.headers['authorization'] === 'string' ? req.headers['authorization'].replace('Bearer ', '') : '');
-  return Boolean(token && typeof token === 'string' && token.startsWith('admin-'));
+  
+  if (!rawToken || typeof rawToken !== 'string') return false;
+  const token = rawToken.trim();
+
+  // Validate token strictly against server session store
+  const session = activeAdminSessions.get(token);
+  if (!session) return false;
+
+  if (Date.now() > session.expiresAt) {
+    activeAdminSessions.delete(token);
+    return false;
+  }
+
+  return true;
+}
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!isAdminRequest(req)) {
+    return res.status(403).json({ 
+      error: 'Acesso negado: esta ação requer credenciais válidas de administrador autenticado.' 
+    });
+  }
+  next();
+}
+
+// In-memory rate limiting against brute force and scraping
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+const rateLimits = new Map<string, RateLimitEntry>();
+
+function createRateLimiter(windowMs: number, maxRequests: number, message: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+    const key = `${req.path}:${ip}`;
+    const now = Date.now();
+    const entry = rateLimits.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+
+    if (entry.count >= maxRequests) {
+      const waitSec = Math.ceil((entry.resetAt - now) / 1000);
+      return res.status(429).json({
+        error: `${message} Aguarde ${waitSec} segundos para tentar novamente.`,
+        retryAfter: waitSec,
+      });
+    }
+
+    entry.count++;
+    next();
+  };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimits.entries()) {
+    if (now > entry.resetAt) rateLimits.delete(key);
+  }
+}, 60000);
+
+// Anti-XSS and injection sanitizer
+function sanitizeText(val: unknown, maxLen: number = 300): string {
+  if (typeof val !== 'string') return '';
+  return val
+    .replace(/<[^>]*>/g, '') // remove HTML tags
+    .replace(/[<>'"`;]/g, '') // strip dangerous chars
+    .trim()
+    .slice(0, maxLen);
 }
 
 function sanitizeOrderForPublic(order: Order): Order {
@@ -485,8 +591,8 @@ app.get('/api/mercadopago/config', (req: Request, res: Response) => {
   });
 });
 
-// 2. Update Token at Runtime (for quick live testing in UI)
-app.post('/api/mercadopago/save-token', (req: Request, res: Response) => {
+// 2. Update Token at Runtime (Admin only)
+app.post('/api/mercadopago/save-token', requireAdmin, (req: Request, res: Response) => {
   const { accessToken, publicKey } = req.body;
   if (typeof accessToken === 'string') {
     runtimeAccessToken = accessToken.trim();
@@ -955,8 +1061,8 @@ app.get('/api/mercadopago/payment-status/:id', async (req: Request, res: Respons
   }
 });
 
-// 6. Simulate Status Change for Testing (Approved, Rejected, Cancelled)
-app.post('/api/mercadopago/simulate-status/:id', (req: Request, res: Response) => {
+// 6. Simulate Status Change for Testing (Admin only)
+app.post('/api/mercadopago/simulate-status/:id', requireAdmin, (req: Request, res: Response) => {
   const paymentId = req.params.id;
   const targetStatus: OrderStatus = req.body.status || 'aprovado';
 
@@ -1144,20 +1250,21 @@ app.post('/api/orders', (req: Request, res: Response) => {
       paymentStatus: paymentStatus as OrderStatus,
       paymentId: paymentId ? String(paymentId) : undefined,
       paymentDetail: paymentDetail || 'Aguardando processamento',
-      patient: patient || {
-        name: 'Cliente Vitale',
-        email: '',
-        phone: '',
-        cpf: '',
-        address: '',
-        neighborhood: '',
-        city: 'Teresina - PI',
-        cep: '',
+      patient: {
+        name: sanitizeText(patient?.name || 'Cliente Vitale', 100),
+        email: sanitizeText(patient?.email || '', 100),
+        phone: sanitizeText(patient?.phone || '', 25),
+        cpf: sanitizeText(patient?.cpf || '', 20),
+        address: sanitizeText(patient?.address || '', 200),
+        neighborhood: sanitizeText(patient?.neighborhood || 'Teresina - PI', 100),
+        city: sanitizeText(patient?.city || 'Teresina', 50),
+        cep: sanitizeText(patient?.cep || '', 15),
       },
-      schedule: schedule || {
-        date: 'Amanhã',
-        isoDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        time: '14:00',
+      schedule: {
+        date: sanitizeText(schedule?.date || 'Amanhã', 50),
+        isoDate: sanitizeText(schedule?.isoDate || new Date(Date.now() + 86400000).toISOString().split('T')[0], 20),
+        time: sanitizeText(schedule?.time || '14:00', 10),
+        notes: schedule?.notes ? sanitizeText(schedule.notes, 300) : undefined,
       },
       pixData: pixData || undefined,
       history: [
@@ -1255,8 +1362,8 @@ app.patch('/api/orders/:id/status', (req: Request, res: Response) => {
   res.json(order);
 });
 
-// Delete order
-app.delete('/api/orders/:id', (req: Request, res: Response) => {
+// Delete order (Admin only)
+app.delete('/api/orders/:id', requireAdmin, (req: Request, res: Response) => {
   const orderId = req.params.id;
   const exists = ordersStore.has(orderId);
   if (exists) {
@@ -1295,25 +1402,27 @@ app.get('/api/procedures', (req: Request, res: Response) => {
   res.json(Array.from(proceduresStore.values()));
 });
 
-// Create new procedure
-app.post('/api/procedures', (req: Request, res: Response) => {
+// Create new procedure (Admin only with input sanitization)
+app.post('/api/procedures', requireAdmin, (req: Request, res: Response) => {
   try {
     const { name, category, price, duration, sessions, image, description, benefits } = req.body;
     if (!name || price === undefined) {
       return res.status(400).json({ error: 'Nome e valor do procedimento são obrigatórios.' });
     }
 
-    const id = req.body.id || `proc-${Date.now()}`;
+    const id = req.body.id ? sanitizeText(req.body.id, 50) : `proc-${Date.now()}`;
     const newProc: Procedure = {
       id,
-      name: String(name).trim(),
+      name: sanitizeText(name, 150),
       category: category || 'facial',
-      price: Math.max(0, Number(price) || 0),
-      duration: duration || '45 min',
-      sessions: sessions || '1 sessão',
-      image: image || 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80',
-      description: String(description || '').trim(),
-      benefits: Array.isArray(benefits) ? benefits.map((b: any) => String(b).trim()).filter(Boolean) : [],
+      price: Math.max(0, Math.min(Number(price) || 0, 50000)),
+      duration: sanitizeText(duration || '45 min', 50),
+      sessions: sanitizeText(sessions || '1 sessão', 50),
+      image: typeof image === 'string' && image.startsWith('http') ? image.trim() : 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80',
+      description: sanitizeText(description || '', 1000),
+      benefits: Array.isArray(benefits) 
+        ? benefits.map((b: any) => sanitizeText(b, 150)).filter(Boolean) 
+        : [],
     };
 
     proceduresStore.set(id, newProc);
@@ -1323,8 +1432,8 @@ app.post('/api/procedures', (req: Request, res: Response) => {
   }
 });
 
-// Update procedure
-app.put('/api/procedures/:id', (req: Request, res: Response) => {
+// Update procedure (Admin only with input sanitization)
+app.put('/api/procedures/:id', requireAdmin, (req: Request, res: Response) => {
   const { id } = req.params;
   const existing = proceduresStore.get(id);
   if (!existing) {
@@ -1334,22 +1443,24 @@ app.put('/api/procedures/:id', (req: Request, res: Response) => {
   const { name, category, price, duration, sessions, image, description, benefits } = req.body;
   const updated: Procedure = {
     ...existing,
-    name: name !== undefined ? String(name).trim() : existing.name,
+    name: name !== undefined ? sanitizeText(name, 150) : existing.name,
     category: category !== undefined ? category : existing.category,
-    price: price !== undefined ? Math.max(0, Number(price) || 0) : existing.price,
-    duration: duration !== undefined ? duration : existing.duration,
-    sessions: sessions !== undefined ? sessions : existing.sessions,
-    image: image !== undefined ? image : existing.image,
-    description: description !== undefined ? String(description).trim() : existing.description,
-    benefits: Array.isArray(benefits) ? benefits.map((b: any) => String(b).trim()).filter(Boolean) : existing.benefits,
+    price: price !== undefined ? Math.max(0, Math.min(Number(price) || 0, 50000)) : existing.price,
+    duration: duration !== undefined ? sanitizeText(duration, 50) : existing.duration,
+    sessions: sessions !== undefined ? sanitizeText(sessions, 50) : existing.sessions,
+    image: image !== undefined && typeof image === 'string' && image.startsWith('http') ? image.trim() : existing.image,
+    description: description !== undefined ? sanitizeText(description, 1000) : existing.description,
+    benefits: Array.isArray(benefits) 
+      ? benefits.map((b: any) => sanitizeText(b, 150)).filter(Boolean) 
+      : existing.benefits,
   };
 
   proceduresStore.set(id, updated);
   res.json(updated);
 });
 
-// Delete procedure
-app.delete('/api/procedures/:id', (req: Request, res: Response) => {
+// Delete procedure (Admin only)
+app.delete('/api/procedures/:id', requireAdmin, (req: Request, res: Response) => {
   const { id } = req.params;
   if (proceduresStore.has(id)) {
     proceduresStore.delete(id);
@@ -1358,8 +1469,8 @@ app.delete('/api/procedures/:id', (req: Request, res: Response) => {
   res.status(404).json({ error: 'Procedimento não encontrado.' });
 });
 
-// Reset procedures to default list
-app.post('/api/procedures/reset', (req: Request, res: Response) => {
+// Reset procedures to default list (Admin only)
+app.post('/api/procedures/reset', requireAdmin, (req: Request, res: Response) => {
   proceduresStore.clear();
   PROCEDURES.forEach(p => proceduresStore.set(p.id, { ...p }));
   res.json(Array.from(proceduresStore.values()));
@@ -1368,19 +1479,37 @@ app.post('/api/procedures/reset', (req: Request, res: Response) => {
 // ==========================================
 // ADMIN AUTHENTICATION (API)
 // ==========================================
-app.post('/api/admin/login', (req: Request, res: Response) => {
+// Rate limit: 5 attempts per 15 minutes to eliminate brute force attacks
+const loginRateLimiter = createRateLimiter(15 * 60 * 1000, 5, 'Muitas tentativas consecutivas de acesso administrativo.');
+
+app.post('/api/admin/login', loginRateLimiter, (req: Request, res: Response) => {
   const { username, login, email, password } = req.body;
   const user = (username || login || email || '').toString().trim().toLowerCase();
   const pass = (password || '').toString().trim();
+  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
 
-  // Defined credentials: login "werica", password "q8wwpqo5"
-  const isValidUser = user === 'werica' || user === 'wericareiss@gmail.com' || user === 'werica@vitale.com.br';
-  const isValidPass = pass === 'q8wwpqo5';
+  const validUsers = ['werica', 'wericareiss@gmail.com', 'werica@vitale.com.br'];
+  const expectedPassword = process.env.ADMIN_PASSWORD || 'q8wwpqo5';
+
+  const isValidUser = validUsers.includes(user);
+
+  // Timing-safe comparison to prevent timing attacks
+  let isValidPass = false;
+  try {
+    const passBuf = Buffer.from(pass);
+    const expBuf = Buffer.from(expectedPassword);
+    if (passBuf.length === expBuf.length) {
+      isValidPass = crypto.timingSafeEqual(passBuf, expBuf);
+    }
+  } catch {
+    isValidPass = false;
+  }
 
   if (isValidUser && isValidPass) {
+    const sessionToken = createAdminSession(user, ip);
     return res.json({
       success: true,
-      token: `admin-${Date.now()}`,
+      token: sessionToken,
       user: {
         name: 'Wérica (Administradora)',
         username: 'werica',
@@ -1390,7 +1519,17 @@ app.post('/api/admin/login', (req: Request, res: Response) => {
     });
   }
 
-  res.status(401).json({ error: 'Usuário ou senha incorretos. Verifique suas credenciais.' });
+  res.status(401).json({ error: 'Credenciais de acesso incorretas. Tente novamente.' });
+});
+
+// Admin Logout: invalidate session on server
+app.post('/api/admin/logout', (req: Request, res: Response) => {
+  const rawToken = (req.headers['x-admin-token'] || 
+    (typeof req.headers['authorization'] === 'string' ? req.headers['authorization'].replace('Bearer ', '') : '')) as string;
+  if (rawToken) {
+    activeAdminSessions.delete(rawToken.trim());
+  }
+  res.json({ success: true, message: 'Sessão administrativa encerrada com segurança.' });
 });
 
 // ==========================================

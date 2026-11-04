@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Clock, Plus, Check, Tag, Video } from 'lucide-react';
+import { Sparkles, Clock, Plus, Check, Tag, Video, Search, X, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Procedure, PackageType } from '../types';
 import { PROCEDURES } from '../data/procedures';
@@ -19,6 +19,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
   cartItemIds,
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('todos');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   // Store selected package per procedure id
   const [selectedPackages, setSelectedPackages] = useState<Record<string, PackageType>>({});
   // Store selected modality for Avaliação (Presencial R$100 vs Videochamada R$50)
@@ -34,10 +35,18 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
     }, 2000);
   };
 
-  const filtered = (activeCategory === 'todos' 
-    ? procedures 
-    : procedures.filter(p => p.category === activeCategory)
-  ).filter(p => p.id !== 'avaliacao-facial-video');
+  const filtered = procedures
+    .filter(p => p.id !== 'avaliacao-facial-video')
+    .filter(p => activeCategory === 'todos' || p.category === activeCategory)
+    .filter(p => {
+      if (!searchTerm.trim()) return true;
+      const term = searchTerm.toLowerCase().trim();
+      return (
+        p.name.toLowerCase().includes(term) ||
+        p.description.toLowerCase().includes(term) ||
+        (p.badge && p.badge.toLowerCase().includes(term))
+      );
+    });
 
   const formatCurrency = (val: number) => {
     return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -51,141 +60,211 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
   return (
     <main id="procedimentos" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow">
       
-      {/* Header and Category Tabs */}
+      {/* Header, Search Bar and Category Tabs */}
       <motion.div
         initial={{ opacity: 0, y: 25 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-50px' }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
+        className="space-y-6 mb-10"
       >
-        <div>
-          <div className="inline-flex items-center gap-1.5 text-gold-400 text-xs font-semibold uppercase tracking-widest mb-1">
-            <Sparkles className="w-3.5 h-3.5" /> Atendimento Domiciliar em Teresina
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-gold-400 text-xs font-semibold uppercase tracking-widest mb-1">
+              <Sparkles className="w-3.5 h-3.5" /> Atendimento Domiciliar em Teresina
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl text-white">
+              Procedimentos
+            </h2>
+            <p className="text-xs text-neutral-400 mt-1">
+              Escolha sessão avulsa ou pacotes com <strong className="text-emerald-400">15% OFF (3 sessões)</strong> e <strong className="text-gold-400">25% OFF (5 sessões)</strong>
+            </p>
           </div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-white">
-            Procedimentos
-          </h2>
-          <p className="text-xs text-neutral-400 mt-1">
-            Escolha sessão avulsa ou pacotes com <strong className="text-emerald-400">15% OFF (3 sessões)</strong> e <strong className="text-gold-400">25% OFF (5 sessões)</strong>
-          </p>
+
+          {/* Real-Time Search Bar Input */}
+          <div className="relative w-full md:w-80">
+            <Search className="w-4 h-4 text-gold-400/70 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar procedimento pelo nome..."
+              className="w-full bg-onyx-900 border border-white/10 focus:border-gold-500/60 rounded-xl pl-10 pr-9 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none transition-all shadow-inner focus:ring-1 focus:ring-gold-500/30"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors p-1 cursor-pointer"
+                title="Limpar busca"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Categories Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
-          {[
-            { id: 'todos', label: 'Todos os Procedimentos' },
-            { id: 'injetaveis', label: 'Injetáveis & Enzimas' },
-            { id: 'facial', label: 'Facial & Renovação Cutânea' },
-            { id: 'corporal', label: 'Corporal & Drenagem' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveCategory(tab.id)}
-              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                activeCategory === tab.id
-                  ? 'bg-gold-500 text-onyx-950 shadow-md font-bold'
-                  : 'bg-onyx-850 hover:bg-onyx-800 text-neutral-300 hover:text-white border border-white/5'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Categories Tabs & Results counter */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/5">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
+            {[
+              { id: 'todos', label: 'Todos os Procedimentos' },
+              { id: 'injetaveis', label: 'Injetáveis & Enzimas' },
+              { id: 'facial', label: 'Facial & Renovação Cutânea' },
+              { id: 'corporal', label: 'Corporal & Drenagem' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveCategory(tab.id)}
+                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  activeCategory === tab.id
+                    ? 'bg-gold-500 text-onyx-950 shadow-md font-bold'
+                    : 'bg-onyx-850 hover:bg-onyx-800 text-neutral-300 hover:text-white border border-white/5'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="text-[11px] text-neutral-400 font-medium shrink-0">
+            {filtered.length} {filtered.length === 1 ? 'procedimento disponível' : 'procedimentos disponíveis'}
+            {searchTerm && <span className="text-gold-400 ml-1">para "{searchTerm}"</span>}
+          </div>
         </div>
       </motion.div>
 
-      {/* Procedures Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {filtered.map((proc, index) => {
-          const isMainConsulta = isAvaliacaoProcedure(proc);
-          const isTest = isTestProcedure(proc);
-          const isSinglePrice = isSinglePricingProcedure(proc);
+      {/* Empty State when Search has no results */}
+      {filtered.length === 0 ? (
+        <div className="py-16 text-center bg-onyx-900/60 rounded-3xl border border-dashed border-white/10 p-8 space-y-3">
+          <Search className="w-10 h-10 text-neutral-500 mx-auto mb-2" />
+          <h3 className="text-base font-serif text-white font-medium">Nenhum procedimento encontrado</h3>
+          <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+            Não encontramos resultados para "{searchTerm}". Tente buscar por outros termos como "Seca Barriga", "Limpeza", "Vitaminas" ou "Drenagem".
+          </p>
+          <button
+            type="button"
+            onClick={() => { setSearchTerm(''); setActiveCategory('todos'); }}
+            className="px-4 py-2 rounded-xl bg-onyx-800 hover:bg-gold-500 hover:text-onyx-950 text-gold-400 text-xs font-bold transition-all border border-gold-500/30 cursor-pointer inline-flex items-center gap-1.5 mt-2"
+          >
+            <X className="w-3.5 h-3.5" /> Limpar busca e ver todos
+          </button>
+        </div>
+      ) : (
+        /* Procedures Grid */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {filtered.map((proc, index) => {
+            const isMainConsulta = isAvaliacaoProcedure(proc);
+            const isTest = isTestProcedure(proc);
+            const isSinglePrice = isSinglePricingProcedure(proc);
 
-          const evalModality = consultationModalities[proc.id] || 'presencial';
-          const isCurrentVideo = isMainConsulta && evalModality === 'video';
+            const evalModality = consultationModalities[proc.id] || 'presencial';
+            const isCurrentVideo = isMainConsulta && evalModality === 'video';
 
-          const effectivePrice = isCurrentVideo ? 50 : proc.price;
-          const currentPkgType = selectedPackages[proc.id] || 'single';
-          const pkgs = calculatePackages(effectivePrice);
-          const activePkg = pkgs[currentPkgType] || pkgs.single;
+            const effectivePrice = isCurrentVideo ? 50 : proc.price;
+            const currentPkgType = selectedPackages[proc.id] || 'single';
+            const pkgs = calculatePackages(effectivePrice);
+            const activePkg = pkgs[currentPkgType] || pkgs.single;
 
-          // Target procedure when adding to cart or opening modal
-          const effectiveProc: Procedure = isCurrentVideo ? {
-            ...proc,
-            id: 'avaliacao-facial-video',
-            name: 'Avaliação Facial por Videochamada (Online)',
-            price: 50,
-            duration: '30 min',
-            sessions: 'Consulta Online por Vídeo',
-            image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=700&q=80',
-            description: 'Consulta diagnóstica e anamnese personalizada ao vivo por videochamada (Google Meet ou WhatsApp Vídeo). Avaliação completa da sua pele com especialista sem sair de casa.',
-            benefits: [
-              'Consulta 100% online por vídeo com especialista',
-              'Valor acessível de apenas R$ 50,00',
-              'Análise das queixas dérmicas e indicação de tratamentos ideais',
-              'Prescrição de rotina home care diária (sem taxa de deslocamento)'
-            ]
-          } : isMainConsulta ? {
-            ...proc,
-            id: 'consulta-avaliacao',
-            name: 'Avaliação Facial & Corporal (Presencial)',
-            price: 100,
-            duration: '45 min',
-            sessions: 'Atendimento Presencial Domiciliar',
-            image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80',
-            description: 'Descubra o tratamento ideal para sua pele e seu corpo no conforto da sua casa com kit hospitalar e maca. O valor de R$ 100 vira desconto integral ao agendar outro procedimento.',
-            benefits: [
-              'Atendimento com hora marcada na sua residência em Teresina',
-              'Indicação precisa do melhor tratamento para você',
-              'Maca confortável e descartáveis hospitalares inclusos',
-              'O valor de R$ 100 vira desconto no seu carrinho ao agendar outro serviço'
-            ]
-          } : proc;
+            // Target procedure when adding to cart or opening modal
+            const effectiveProc: Procedure = isCurrentVideo ? {
+              ...proc,
+              id: 'avaliacao-facial-video',
+              name: 'Avaliação Facial por Videochamada (Online)',
+              price: 50,
+              duration: '30 min',
+              sessions: 'Consulta Online por Vídeo',
+              image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=700&q=80',
+              description: 'Consulta diagnóstica e anamnese personalizada ao vivo por videochamada (Google Meet ou WhatsApp Vídeo). Avaliação completa da sua pele com especialista sem sair de casa.',
+              benefits: [
+                'Consulta 100% online por vídeo com especialista',
+                'Valor acessível de apenas R$ 50,00',
+                'Análise das queixas dérmicas e indicação de tratamentos ideais',
+                'Prescrição de rotina home care diária (sem taxa de deslocamento)'
+              ]
+            } : isMainConsulta ? {
+              ...proc,
+              id: 'consulta-avaliacao',
+              name: 'Avaliação Facial & Corporal (Presencial)',
+              price: 100,
+              duration: '45 min',
+              sessions: 'Atendimento Presencial Domiciliar',
+              image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80',
+              description: 'Descubra o tratamento ideal para sua pele e seu corpo no conforto da sua casa com kit hospitalar e maca. O valor de R$ 100 vira desconto integral ao agendar outro procedimento.',
+              benefits: [
+                'Atendimento com hora marcada na sua residência em Teresina',
+                'Indicação precisa do melhor tratamento para você',
+                'Maca confortável e descartáveis hospitalares inclusos',
+                'O valor de R$ 100 vira desconto no seu carrinho ao agendar outro serviço'
+              ]
+            } : proc;
 
-          // Check if item or specific package is in cart
-          const isInCart = cartItemIds.includes(effectiveProc.id);
+            // Check if item or specific package is in cart
+            const isInCart = cartItemIds.includes(effectiveProc.id);
 
-          return (
-            <motion.div
-              key={proc.id}
-              layout
-              initial={{ opacity: 0, y: 35 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{
-                duration: 0.55,
-                delay: (index % 4) * 0.08,
-                ease: [0.21, 0.47, 0.32, 0.98]
-              }}
-              whileHover={{ y: -6, transition: { duration: 0.25 } }}
-              className="group relative rounded-2xl bg-onyx-900 border border-white/5 hover:border-gold-500/40 p-4 transition-colors duration-300 flex flex-col justify-between hover:shadow-2xl hover:shadow-gold-500/5"
-            >
-              <div>
-                {/* Image */}
-                <div className="relative w-full h-48 rounded-xl overflow-hidden mb-3 bg-onyx-850">
-                  <img
-                    src={effectiveProc.image}
-                    alt={effectiveProc.name}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80';
-                    }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <span className={`absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${
-                    isTest
-                      ? 'bg-blue-950/80 text-blue-400 border-blue-500/30'
-                      : isCurrentVideo
-                      ? 'bg-blue-950/80 text-blue-300 border-blue-400/40 flex items-center gap-1'
-                      : 'bg-onyx-950/80 text-gold-400 border border-gold-500/30'
-                  }`}>
-                    {isCurrentVideo && <Video className="w-2.5 h-2.5" />}
-                    {isTest ? 'Ambiente Real' : isCurrentVideo ? '100% Online (Vídeo)' : 'Domicílio em THE'}
-                  </span>
-                  <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-black/70 backdrop-blur-sm text-neutral-300 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-gold-400" /> {effectiveProc.duration}
-                  </span>
-                </div>
+            return (
+              <motion.div
+                key={proc.id}
+                layout
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{
+                  duration: 0.55,
+                  delay: (index % 4) * 0.08,
+                  ease: [0.21, 0.47, 0.32, 0.98]
+                }}
+                whileHover={{ y: -6, transition: { duration: 0.25 } }}
+                className="group relative rounded-2xl bg-onyx-900 border border-white/5 hover:border-gold-500/40 p-4 transition-colors duration-300 flex flex-col justify-between hover:shadow-2xl hover:shadow-gold-500/5"
+              >
+                <div>
+                  {/* Image */}
+                  <div className="relative w-full h-48 rounded-xl overflow-hidden mb-3 bg-onyx-850">
+                    <img
+                      src={effectiveProc.image}
+                      alt={effectiveProc.name}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80';
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+
+                    {/* Modality / Environment Pill (Top Left) */}
+                    <span className={`absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${
+                      isTest
+                        ? 'bg-blue-950/80 text-blue-400 border-blue-500/30'
+                        : isCurrentVideo
+                        ? 'bg-blue-950/80 text-blue-300 border-blue-400/40 flex items-center gap-1'
+                        : 'bg-onyx-950/80 text-gold-400 border border-gold-500/30'
+                    }`}>
+                      {isCurrentVideo && <Video className="w-2.5 h-2.5" />}
+                      {isTest ? 'Ambiente Real' : isCurrentVideo ? '100% Online (Vídeo)' : 'Domicílio em THE'}
+                    </span>
+
+                    {/* Configurable Highlight Tag: Mais Procurado, Promoção, Destaque (Top Right) */}
+                    {effectiveProc.badge && (
+                      <span className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-lg flex items-center gap-1 z-10 ${
+                        effectiveProc.badge.toLowerCase().includes('promo')
+                          ? 'bg-emerald-500 text-white shadow-emerald-500/30 border border-emerald-400/40'
+                          : effectiveProc.badge.toLowerCase().includes('procurado')
+                          ? 'gold-gradient-bg text-onyx-950 shadow-gold-500/30 font-black'
+                          : 'bg-gold-500/25 text-gold-300 border border-gold-500/50'
+                      }`}>
+                        {effectiveProc.badge.toLowerCase().includes('promo') ? (
+                          <Tag className="w-3 h-3" />
+                        ) : (
+                          <Flame className="w-3 h-3 fill-current" />
+                        )}
+                        <span>{effectiveProc.badge}</span>
+                      </span>
+                    )}
+
+                    {/* Duration pill (Bottom Right) */}
+                    <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-black/70 backdrop-blur-sm text-neutral-300 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-gold-400" /> {effectiveProc.duration}
+                    </span>
+                  </div>
 
                 {/* Title & Description */}
                 <h3 className="font-serif text-lg font-medium text-white mb-1.5 leading-snug line-clamp-2">
@@ -413,6 +492,7 @@ export const ProceduresCatalog: React.FC<ProceduresCatalogProps> = ({
           );
         })}
       </div>
+      )}
 
     </main>
   );

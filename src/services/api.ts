@@ -152,11 +152,24 @@ function saveLocalProcedures(procedures: Procedure[]) {
   } catch {}
 }
 
+function getAdminHeaders(): Record<string, string> {
+  const token = sessionStorage.getItem('vitale_admin_token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['x-admin-token'] = token;
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export const api = {
   // Mercado Pago Config
   async getConfig(): Promise<MercadoPagoConfig> {
     try {
-      const res = await fetch('/api/mercadopago/config');
+      const headers = getAdminHeaders();
+      const res = await fetch('/api/mercadopago/config', { headers });
       if (res.ok) {
         const data = await res.json();
         return data;
@@ -177,7 +190,7 @@ export const api = {
     try {
       const res = await fetch('/api/mercadopago/save-token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ accessToken, publicKey }),
       });
       if (res.ok) return await res.json();
@@ -508,7 +521,7 @@ export const api = {
     try {
       const res = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ status, note }),
       });
       if (res.ok) {
@@ -543,7 +556,10 @@ export const api = {
 
   async deleteOrder(orderId: string): Promise<boolean> {
     try {
-      await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+      await fetch(`/api/orders/${orderId}`, { 
+        method: 'DELETE',
+        headers: getAdminHeaders(),
+      });
     } catch {}
 
     const orders = getLocalOrders().filter(o => o.id !== orderId);
@@ -609,7 +625,7 @@ export const api = {
     try {
       const res = await fetch('/api/procedures', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify(procData),
       });
       if (res.ok) {
@@ -642,7 +658,7 @@ export const api = {
     try {
       const res = await fetch(`/api/procedures/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify(updates),
       });
       if (res.ok) {
@@ -667,7 +683,10 @@ export const api = {
 
   async deleteProcedure(id: string): Promise<boolean> {
     try {
-      const res = await fetch(`/api/procedures/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/procedures/${id}`, { 
+        method: 'DELETE',
+        headers: getAdminHeaders(),
+      });
       if (res.ok) {
         const local = getLocalProcedures().filter(p => p.id !== id);
         saveLocalProcedures(local);
@@ -682,7 +701,10 @@ export const api = {
 
   async resetProcedures(): Promise<Procedure[]> {
     try {
-      const res = await fetch('/api/procedures/reset', { method: 'POST' });
+      const res = await fetch('/api/procedures/reset', { 
+        method: 'POST',
+        headers: getAdminHeaders(),
+      });
       if (res.ok) {
         const defaults = await res.json();
         saveLocalProcedures(defaults);
@@ -722,6 +744,12 @@ export const api = {
   },
 
   adminLogout() {
+    try {
+      fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: getAdminHeaders(),
+      }).catch(() => {});
+    } catch {}
     sessionStorage.removeItem('vitale_admin_token');
   },
 

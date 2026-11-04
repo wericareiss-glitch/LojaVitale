@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ShieldCheck, CreditCard, Zap, Lock } from 'lucide-react';
+import { Sparkles, ShieldCheck, CreditCard, Zap, Lock, Instagram, ExternalLink } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface FooterProps {
@@ -22,9 +22,26 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
           <p className="leading-relaxed mb-3">
             Serviço Concierge de Estética Avançada e Injetáveis com atendimento 100% no domicílio do paciente em Teresina, Piauí.
           </p>
-          <div className="inline-flex items-center gap-1.5 text-[11px] text-neutral-400 bg-onyx-900 border border-white/5 px-2.5 py-1.5 rounded-lg">
-            <Lock className="w-3 h-3 text-gold-400 shrink-0" />
-            <span>WhatsApp VIP: Liberado após confirmação do procedimento</span>
+
+          <div className="space-y-2 mb-3">
+            <a
+              href="https://www.instagram.com/_wericareis/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-onyx-900 border border-white/5 hover:border-gold-500/30 text-neutral-400 hover:text-neutral-200 transition-colors text-xs group"
+              title="Acessar o perfil de Wérica Reis no Instagram"
+            >
+              <Instagram className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+              <span className="text-[11px]">
+                Instagram: <strong className="font-semibold text-neutral-200 group-hover:text-gold-400 transition-colors">@_wericareis</strong>
+              </span>
+              <ExternalLink className="w-3 h-3 text-neutral-600 group-hover:text-neutral-400 ml-1 transition-colors" />
+            </a>
+
+            <div className="inline-flex items-center gap-1.5 text-[11px] text-neutral-400 bg-onyx-900 border border-white/5 px-2.5 py-1.5 rounded-lg w-full">
+              <Lock className="w-3 h-3 text-gold-400 shrink-0" />
+              <span>WhatsApp VIP: Liberado após confirmação</span>
+            </div>
           </div>
         </div>
 
