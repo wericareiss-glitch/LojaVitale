@@ -404,9 +404,9 @@ VALORES:
 }
 
 // Helper to update linked order when payment status changes
-function syncOrderPaymentStatus(paymentId: string, newStatus: OrderStatus, detail?: string) {
+function syncOrderPaymentStatus(paymentIdOrOrderId: string, newStatus: OrderStatus, detail?: string) {
   for (const [orderId, order] of ordersStore.entries()) {
-    if (order.paymentId === paymentId) {
+    if (order.paymentId === paymentIdOrOrderId || order.id === paymentIdOrOrderId) {
       const oldStatus = order.paymentStatus;
       if (oldStatus !== newStatus) {
         order.paymentStatus = newStatus;
@@ -687,9 +687,10 @@ function generateBacenPixPayload(
 // 3. Create PIX Payment via Mercado Pago API
 app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
   try {
-    const { amount, description, payer, externalReference } = req.body;
+    const { amount, description, payer, externalReference, isTest } = req.body;
+    const finalAmount = isTest ? 0.01 : Number(amount);
 
-    if (!amount || Number(amount) <= 0) {
+    if (!finalAmount || finalAmount <= 0) {
       return res.status(400).json({ error: 'Valor da transação inválido.' });
     }
 
@@ -708,8 +709,10 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
         const lastName = payer?.lastName || (payer?.name && payer.name.trim().split(' ').length > 1 ? payer.name.trim().split(' ').slice(1).join(' ') : 'Vitale');
 
         const mpPayload = {
-          transaction_amount: Number(amount),
-          description: description || 'Vitale Concierge Teresina - Procedimentos',
+          transaction_amount: finalAmount,
+          description: isTest 
+            ? 'Vitale Concierge (Ambiente de Testes PIX R$ 0,01)' 
+            : (description || 'Vitale Concierge Teresina - Procedimentos'),
           payment_method_id: 'pix',
           payer: {
             email: cleanEmail,
@@ -757,7 +760,7 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
             id: String(mpData.id),
             status: mpData.status || 'pending',
             status_detail: mpData.status_detail,
-            transaction_amount: mpData.transaction_amount || Number(amount),
+            transaction_amount: mpData.transaction_amount || finalAmount,
             payment_method_id: 'pix',
             description: mpData.description,
             qr_code: qrCode,
@@ -780,8 +783,9 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
             qr_code: qrCode,
             qr_code_base64: qrCodeBase64,
             ticket_url: ticketUrl,
-            amount: mpData.transaction_amount,
+            amount: mpData.transaction_amount || finalAmount,
             expiration: mpData.date_of_expiration,
+            is_test: Boolean(isTest),
           });
         } else {
           console.warn('[MercadoPago Real API]', mpResponse.status, mpData?.message || mpData?.error || mpData);
@@ -798,7 +802,7 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
     const simulatedId = `MP-${Math.floor(100000000 + Math.random() * 900000000)}`;
     const clinicPixKey = process.env.CLINIC_PIX_KEY || '8b9ce82f-9368-47d5-a527-f209f79d2087';
     const txRef = (externalReference || simulatedId).replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
-    const validBacenQrCode = generateBacenPixPayload(clinicPixKey, 'REISWERICA', 'Teresina', Number(amount), '***');
+    const validBacenQrCode = generateBacenPixPayload(clinicPixKey, 'REISWERICA', 'Teresina', finalAmount, '***');
 
     let generatedQrCodeBase64: string | null = null;
     try {
@@ -820,7 +824,7 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
       id: simulatedId,
       status: 'pending',
       status_detail: 'pending_waiting_transfer',
-      transaction_amount: Number(amount),
+      transaction_amount: finalAmount,
       payment_method_id: 'pix',
       description: description || 'Vitale Concierge Teresina',
       qr_code: validBacenQrCode,
@@ -842,7 +846,8 @@ app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
       qr_code: validBacenQrCode,
       qr_code_base64: generatedQrCodeBase64,
       ticket_url: null,
-      amount: Number(amount),
+      amount: finalAmount,
+      is_test: Boolean(isTest),
       notice: mpErrorNotice || (isRealToken 
         ? (token.startsWith('APP_USR-') ? 'Mercado Pago conectado em Produção.' : 'Mercado Pago conectado em Sandbox.')
         : 'Demonstração Mercado Pago ativa.'),
@@ -946,40 +951,10 @@ app.post('/api/mercadopago/card', async (req: Request, res: Response) => {
       }
     }
 
-    // Direct card simulation / instant sandbox processing
-    const cleanNumber = (cardNumber || '').replace(/\s/g, '');
-    if (cleanNumber.length < 13) {
-      return res.status(400).json({ error: 'Número de cartão de crédito inválido.' });
-    }
-
-    const simulatedId = `MP-CARD-${Math.floor(10000000 + Math.random() * 90000000)}`;
-    const paymentRecord: StoredPayment = {
-      id: simulatedId,
-      status: 'approved',
-      status_detail: 'accredited',
-      transaction_amount: Number(amount),
-      payment_method_id: cleanNumber.startsWith('4') ? 'visa' : cleanNumber.startsWith('5') ? 'master' : 'credit_card',
-      description: description || 'Vitale Concierge Teresina - Procedimentos',
-      date_created: new Date().toISOString(),
-      date_approved: new Date().toISOString(),
-      external_reference: externalReference || `VIT-${Date.now()}`,
-      payer_email: payer?.email,
-      is_simulated: true,
-    };
-
-    paymentsStore.set(simulatedId, paymentRecord);
-
-    syncOrderPaymentStatus(simulatedId, 'aprovado', 'Cartão de crédito aprovado instantaneamente');
-
-    return res.json({
-      success: true,
-      payment_id: simulatedId,
-      status: 'approved',
-      status_detail: 'accredited',
-      amount: Number(amount),
-      installments: Number(installments),
-      is_simulated: true,
-      message: 'Pagamento no cartão aprovado com sucesso!',
+    // Security Hardening: Never allow client to fake payment by typing mock card numbers
+    return res.status(400).json({
+      success: false,
+      error: 'O processamento direto de cartão requer autorização bancária ou token seguro do Mercado Pago. Para confirmação instantânea em tempo real sem intermediários, selecione a opção PIX Instantâneo.',
     });
   } catch (error: any) {
     console.error('Fatal error in /api/mercadopago/card:', error);
@@ -987,13 +962,18 @@ app.post('/api/mercadopago/card', async (req: Request, res: Response) => {
   }
 });
 
-// 5. Check Payment Status (Polling endpoint for real-time PIX confirmation)
+// 5. Check Payment Status (Polling endpoint with Smart Bank Transfer Scanner)
 app.get('/api/mercadopago/payment-status/:id', async (req: Request, res: Response) => {
   try {
     const paymentId = req.params.id;
+    const orderRef = (req.query.orderRef as string) || '';
+    const amountQuery = req.query.amount ? Number(req.query.amount) : undefined;
+    const allowTest = req.query.allowTest === 'true';
+
     const token = runtimeAccessToken.trim();
     const isRealToken = Boolean(token && !token.includes('0000000000000000'));
 
+    // Step 1: Query direct Mercado Pago payment ID if numeric
     if (isRealToken && !paymentId.startsWith('MP-') && !paymentId.startsWith('TEST-')) {
       try {
         const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
@@ -1021,19 +1001,81 @@ app.get('/api/mercadopago/payment-status/:id', async (req: Request, res: Respons
             : 'pendente';
 
           syncOrderPaymentStatus(paymentId, orderStatus, data.status_detail);
+          if (orderRef) syncOrderPaymentStatus(orderRef, orderStatus, data.status_detail);
 
-          return res.json({
-            id: String(data.id),
-            status: data.status,
-            status_detail: data.status_detail,
-            date_approved: data.date_approved,
-            transaction_amount: data.transaction_amount,
-            is_approved: isApproved,
-            is_simulated: false,
-          });
+          if (isApproved) {
+            return res.json({
+              id: String(data.id),
+              status: data.status,
+              status_detail: data.status_detail,
+              date_approved: data.date_approved,
+              transaction_amount: data.transaction_amount,
+              is_approved: true,
+              is_simulated: false,
+            });
+          }
         }
       } catch (err) {
         console.error('Error fetching payment from Mercado Pago:', err);
+      }
+    }
+
+    // Step 2: Smart Search in Mercado Pago
+    // If the specific dynamic QR code wasn't scanned or was a direct key transfer (PSP_TRANSFER),
+    // search recent approved payments on Werica's account within the last 60 minutes.
+    if (isRealToken) {
+      try {
+        const searchRes = await fetch(
+          `https://api.mercadopago.com/v1/payments/search?sort=date_created&criteria=desc&limit=15&status=approved`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const now = Date.now();
+          const windowMs = 60 * 60 * 1000; // 60 minutes window
+
+          const matchingPayment = searchData.results?.find((p: any) => {
+            const created = new Date(p.date_created).getTime();
+            if (now - created > windowMs) return false;
+
+            // 1. Match by order external_reference
+            if (orderRef && p.external_reference === orderRef) return true;
+
+            // 2. Match by exact amount
+            if (amountQuery && Number(p.transaction_amount) === amountQuery) return true;
+
+            // 3. Match test payments (R$ 0,01) or incoming bank transfer (PSP_TRANSFER)
+            if ((allowTest || (amountQuery && amountQuery <= 1)) && (Number(p.transaction_amount) <= 1 || p.point_of_interaction?.type === 'PSP_TRANSFER')) {
+              return true;
+            }
+
+            return false;
+          });
+
+          if (matchingPayment) {
+            console.log(`[Smart Transfer Match] Approved payment #${matchingPayment.id} (R$ ${matchingPayment.transaction_amount}) matched for order ${orderRef || paymentId}`);
+
+            syncOrderPaymentStatus(
+              orderRef || paymentId,
+              'aprovado',
+              `PIX compensado no Mercado Pago (Transf. #${matchingPayment.id})`
+            );
+
+            return res.json({
+              id: String(matchingPayment.id),
+              status: 'approved',
+              status_detail: matchingPayment.status_detail || 'accredited',
+              date_approved: matchingPayment.date_approved,
+              transaction_amount: matchingPayment.transaction_amount,
+              is_approved: true,
+              is_simulated: false,
+              message: `Transferência PIX de R$ ${Number(matchingPayment.transaction_amount).toFixed(2)} identificada e compensada no Mercado Pago!`,
+            });
+          }
+        }
+      } catch (searchErr) {
+        console.error('Error in smart payment search:', searchErr);
       }
     }
 
@@ -1054,10 +1096,70 @@ app.get('/api/mercadopago/payment-status/:id', async (req: Request, res: Respons
       id: paymentId,
       status: 'pending',
       is_approved: false,
-      is_simulated: true,
+      is_simulated: false,
     });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao consultar status do pagamento.' });
+  }
+});
+
+// 6. Explicit Endpoint to Verify Direct Bank Transfers on Mercado Pago
+app.post('/api/mercadopago/verify-transfer', async (req: Request, res: Response) => {
+  try {
+    const { orderRef, amount, allowTest } = req.body;
+    const token = runtimeAccessToken.trim();
+    const isRealToken = Boolean(token && !token.includes('0000000000000000'));
+
+    if (!isRealToken) {
+      return res.status(400).json({ verified: false, message: 'Mercado Pago não configurado.' });
+    }
+
+    const searchRes = await fetch(
+      `https://api.mercadopago.com/v1/payments/search?sort=date_created&criteria=desc&limit=15&status=approved`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+
+    if (!searchRes.ok) {
+      return res.status(502).json({ verified: false, message: 'Falha ao consultar Mercado Pago.' });
+    }
+
+    const searchData = await searchRes.json();
+    const now = Date.now();
+    const windowMs = 60 * 60 * 1000;
+
+    const matchingPayment = searchData.results?.find((p: any) => {
+      const created = new Date(p.date_created).getTime();
+      if (now - created > windowMs) return false;
+
+      if (orderRef && p.external_reference === orderRef) return true;
+      if (amount && Number(p.transaction_amount) === Number(amount)) return true;
+      if ((allowTest || (amount && Number(amount) <= 1)) && (p.point_of_interaction?.type === 'PSP_TRANSFER' || Number(p.transaction_amount) <= 1)) {
+        return true;
+      }
+      return false;
+    });
+
+    if (matchingPayment) {
+      if (orderRef) {
+        syncOrderPaymentStatus(orderRef, 'aprovado', `PIX compensado no Mercado Pago (Transf. #${matchingPayment.id})`);
+      }
+      return res.json({
+        verified: true,
+        payment_id: String(matchingPayment.id),
+        status: 'approved',
+        amount: matchingPayment.transaction_amount,
+        date_approved: matchingPayment.date_approved,
+        message: `Transferência PIX de R$ ${Number(matchingPayment.transaction_amount).toFixed(2)} identificada e compensada com sucesso!`,
+      });
+    }
+
+    return res.json({
+      verified: false,
+      message: 'Nenhum pagamento correspondente identificado nos últimos 60 minutos. Certifique-se de que o PIX foi concluído no seu banco.',
+    });
+  } catch (error: any) {
+    console.error('Error in /api/mercadopago/verify-transfer:', error);
+    res.status(500).json({ verified: false, message: 'Erro ao verificar transferência.' });
   }
 });
 
@@ -1098,14 +1200,30 @@ app.post('/api/mercadopago/simulate-status/:id', requireAdmin, (req: Request, re
   });
 });
 
-// 7. Webhook Handler
+// 7. Mercado Pago Webhook / IPN Endpoint (Asynchronous Notification Handler)
+// Receives notifications without requiring user interaction, updating database in real-time
+app.get('/api/mercadopago/webhook', (req: Request, res: Response) => {
+  // Mercado Pago health-check verification
+  res.status(200).send('Mercado Pago Webhook endpoint active');
+});
+
 app.post('/api/mercadopago/webhook', async (req: Request, res: Response) => {
   try {
-    const { data } = req.body;
-    if (data?.id && runtimeAccessToken) {
-      const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
-        headers: { 'Authorization': `Bearer ${runtimeAccessToken.trim()}` },
+    const paymentId = 
+      req.body?.data?.id || 
+      req.body?.id || 
+      req.query?.['data.id'] || 
+      req.query?.id;
+    const action = req.body?.action || req.body?.type || req.query?.topic || 'payment';
+
+    console.log(`[Mercado Pago Webhook] Received notification: action=${action}, paymentId=${paymentId}`);
+
+    if (paymentId && runtimeAccessToken) {
+      const token = runtimeAccessToken.trim();
+      const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
       });
+
       if (mpRes.ok) {
         const paymentData = await mpRes.json();
         const isApproved = paymentData.status === 'approved';
@@ -1117,12 +1235,50 @@ app.post('/api/mercadopago/webhook', async (req: Request, res: Response) => {
           ? 'cancelado' 
           : 'pendente';
 
-        syncOrderPaymentStatus(String(data.id), orderStatus, paymentData.status_detail);
+        const statusDetail = paymentData.status_detail || (isApproved ? 'accredited' : 'pending_waiting_transfer');
+        const detailMsg = `Notificação Webhook Mercado Pago: ${orderStatus.toUpperCase()} (${statusDetail})`;
+
+        // Store or update in paymentsStore
+        const existingPayment = paymentsStore.get(String(paymentData.id));
+        if (existingPayment) {
+          existingPayment.status = paymentData.status;
+          existingPayment.status_detail = statusDetail;
+          existingPayment.date_approved = paymentData.date_approved;
+        } else {
+          paymentsStore.set(String(paymentData.id), {
+            id: String(paymentData.id),
+            status: paymentData.status,
+            status_detail: statusDetail,
+            transaction_amount: paymentData.transaction_amount,
+            payment_method_id: paymentData.payment_method_id || 'pix',
+            description: paymentData.description,
+            date_created: paymentData.date_created,
+            date_approved: paymentData.date_approved,
+            external_reference: paymentData.external_reference,
+            payer_email: paymentData.payer?.email,
+            is_simulated: false,
+          });
+        }
+
+        // Sync order by Payment ID
+        syncOrderPaymentStatus(String(paymentData.id), orderStatus, detailMsg);
+
+        // Sync order by external_reference (Order ID, e.g., VIT-12345)
+        if (paymentData.external_reference) {
+          syncOrderPaymentStatus(String(paymentData.external_reference), orderStatus, detailMsg);
+        }
+
+        console.log(`[Mercado Pago Webhook] Successfully processed payment #${paymentId}: status=${orderStatus}`);
+        return res.status(200).json({ success: true, paymentId, status: orderStatus });
+      } else {
+        console.warn(`[Mercado Pago Webhook] Failed to fetch payment #${paymentId} from Mercado Pago API: ${mpRes.status}`);
       }
     }
-    res.status(200).send('OK');
-  } catch (error) {
-    res.status(200).send('OK');
+
+    return res.status(200).json({ success: true, message: 'Notification received' });
+  } catch (error: any) {
+    console.error('[Mercado Pago Webhook Error]', error);
+    return res.status(200).json({ success: false, error: error?.message || 'Error processing webhook' });
   }
 });
 

@@ -213,6 +213,7 @@ export const api = {
       lastName?: string;
     };
     externalReference?: string;
+    isTest?: boolean;
   }) {
     try {
       const res = await fetch('/api/mercadopago/pix', {
@@ -228,11 +229,12 @@ export const api = {
     // Fallback standard BACEN PIX (runs anywhere, with valid CRC-16)
     const simulatedId = `MP-${Math.floor(100000000 + Math.random() * 900000000)}`;
     const pixKey = CLINIC_CONFIG.pixKey || '8b9ce82f-9368-47d5-a527-f209f79d2087';
+    const finalAmt = payload.isTest ? 0.01 : Number(payload.amount);
     const validQrCode = generateBacenPixPayload(
       pixKey,
       'REISWERICA',
       'Teresina',
-      Number(payload.amount),
+      finalAmt,
       '***'
     );
 
@@ -245,11 +247,11 @@ export const api = {
       qr_code: validQrCode,
       qr_code_base64: null,
       ticket_url: null,
-      amount: Number(payload.amount),
+      amount: finalAmt,
     };
   },
 
-  // Mercado Pago Card
+  // Mercado Pago Card (Strict Security: No Mock Bypasses)
   async processCard(payload: {
     amount: number;
     description: string;
@@ -273,25 +275,32 @@ export const api = {
       if (res.ok) {
         return await res.json();
       }
-    } catch {}
-
-    // Fallback simulated Card approval
-    const simulatedId = `MP-CARD-${Math.floor(10000000 + Math.random() * 90000000)}`;
-    return {
-      success: true,
-      payment_id: simulatedId,
-      status: 'approved',
-      status_detail: 'accredited',
-      amount: Number(payload.amount),
-      installments: Number(payload.installments),
-      is_simulated: true,
-    };
+      const err = await res.json().catch(() => ({}));
+      return {
+        success: false,
+        message: err.error || err.message || 'Pagamento no cartão não autorizado pelo Mercado Pago.',
+      };
+    } catch {
+      return {
+        success: false,
+        message: 'Não foi possível processar o cartão. Utilize o PIX Instantâneo com compensação bancária em tempo real.',
+      };
+    }
   },
 
-  // Check Payment Status (Polling)
-  async checkPaymentStatus(paymentId: string) {
+  // Check Payment Status (Polling & Smart Scanner)
+  async checkPaymentStatus(
+    paymentId: string,
+    options?: { orderRef?: string; amount?: number; allowTest?: boolean }
+  ) {
     try {
-      const res = await fetch(`/api/mercadopago/payment-status/${paymentId}`);
+      const params = new URLSearchParams();
+      if (options?.orderRef) params.set('orderRef', options.orderRef);
+      if (options?.amount !== undefined) params.set('amount', String(options.amount));
+      if (options?.allowTest) params.set('allowTest', 'true');
+      const q = params.toString() ? `?${params.toString()}` : '';
+
+      const res = await fetch(`/api/mercadopago/payment-status/${paymentId}${q}`);
       if (res.ok) {
         return await res.json();
       }
@@ -299,12 +308,67 @@ export const api = {
 
     // In static mode, check local orders
     const orders = getLocalOrders();
-    const matched = orders.find(o => o.paymentId === paymentId);
+    const matched = orders.find(o => o.paymentId === paymentId || (options?.orderRef && o.id === options.orderRef));
     if (matched && matched.paymentStatus === 'aprovado') {
       return { id: paymentId, status: 'approved', is_approved: true };
     }
 
     return { id: paymentId, status: 'pending', is_approved: false };
+  },
+
+  // Explicit transfer verification endpoint for direct bank transfers to Werica's key
+  async verifyIncomingTransfer(options: { orderRef: string; amount?: number; allowTest?: boolean }) {
+    try {
+      const res = await fetch('/api/mercadopago/verify-transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      const data = await res.json().catch(() => ({}));
+      return { verified: false, message: data.message || 'Transferência não localizada no Mercado Pago.' };
+    } catch (e: any) {
+      return { verified: false, message: e.message || 'Erro ao consultar Mercado Pago.' };
+    }
+  },
+
+  // Mercado Pago Webhook / Notification Handler (Asynchronous)
+  async handleWebhookNotification(payload: { data?: { id: string | number }; id?: string | number; action?: string; type?: string }) {
+    try {
+      const res = await fetch('/api/mercadopago/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.error('Error forwarding webhook notification:', err);
+    }
+
+    // Local state fallback (client-side persistence when offline)
+    const paymentId = payload?.data?.id || payload?.id;
+    if (paymentId) {
+      const orders = getLocalOrders();
+      const order = orders.find(o => o.paymentId === String(paymentId) || o.id === String(paymentId));
+      if (order) {
+        order.paymentStatus = 'aprovado';
+        order.updatedAt = new Date().toISOString();
+        saveLocalOrders(orders);
+        pushLocalNotification(
+          order.id,
+          'Pagamento Aprovado via Webhook! 🎉',
+          `Pedido #${order.id} confirmado assincronamente pelo Mercado Pago.`,
+          'success'
+        );
+        return { success: true, orderId: order.id, status: 'aprovado' };
+      }
+    }
+
+    return { success: true, message: 'Notificação recebida' };
   },
 
   // Simulate Status for Testing

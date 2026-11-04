@@ -41,6 +41,7 @@ import { CLINIC_CONFIG } from '../data/procedures';
 import { api } from '../services/api';
 import { calculateShippingFee, ORIGIN_CONFIG, ShippingCalculation } from '../services/shipping';
 import { isAvaliacaoProcedure, isTestProcedure, isSinglePricingProcedure, isVideoCallProcedure } from '../utils/packages';
+import { usePaymentPolling } from '../hooks/usePaymentPolling';
 
 interface CheckoutDrawerProps {
   isOpen: boolean;
@@ -102,9 +103,8 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
   const [pixData, setPixData] = useState<PixPaymentData | null>(null);
   const [isPixGenerating, setIsPixGenerating] = useState(false);
   const [pixTimeRemaining, setPixTimeRemaining] = useState(15 * 60);
-  const [isPollingStatus, setIsPollingStatus] = useState(false);
-  const [isVerifyingPix, setIsVerifyingPix] = useState(false);
-  const [lastCheckMessage, setLastCheckMessage] = useState<string | null>(null);
+  const [isTestPixMode, setIsTestPixMode] = useState<boolean>(false);
+  const [isVerifyingDirectTransfer, setIsVerifyingDirectTransfer] = useState(false);
 
   // Card form state
   const [cardNumber, setCardNumber] = useState('');
@@ -324,27 +324,6 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
     return () => clearInterval(timer);
   }, [currentStep, paymentMethod]);
 
-  // Polling for PIX status
-  useEffect(() => {
-    let interval: any;
-    if (currentStep === 3 && paymentMethod === 'pix' && pixData?.paymentId) {
-      setIsPollingStatus(true);
-      interval = setInterval(async () => {
-        try {
-          const res = await api.checkPaymentStatus(pixData.paymentId);
-          if (res.is_approved || res.status === 'approved') {
-            clearInterval(interval);
-            handlePaymentApproved('pix', pixData.paymentId, 'PIX aprovado via Mercado Pago');
-          }
-        } catch (err) {
-          console.error('Polling error:', err);
-        }
-      }, 3000);
-    } else {
-      setIsPollingStatus(false);
-    }
-    return () => clearInterval(interval);
-  }, [currentStep, paymentMethod, pixData]);
 
   const formatCurrency = (val: number) => {
     return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -586,21 +565,27 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
     generatePixPayment(ref);
   };
 
-  const generatePixPayment = async (orderRefId?: string) => {
+  const generatePixPayment = async (orderRefId?: string, forceTestMode?: boolean) => {
     setIsPixGenerating(true);
     try {
       const orderRef = orderRefId || currentOrderRef || `VIT-${Math.floor(10000 + Math.random() * 90000)}`;
       if (!currentOrderRef) setCurrentOrderRef(orderRef);
 
+      const isTest = forceTestMode !== undefined ? forceTestMode : isTestPixMode;
+      const chargeAmount = isTest ? 0.01 : total;
+
       const res = await api.createPix({
-        amount: total,
-        description: `Vitale Concierge: ${cart.map(i => i.name).join(', ')}`,
+        amount: chargeAmount,
+        description: isTest 
+          ? 'Vitale Concierge (Ambiente de Testes PIX R$ 0,01)' 
+          : `Vitale Concierge: ${cart.map(i => i.name).join(', ')}`,
         payer: {
           email: patient.email,
           name: patient.name,
           cpf: patient.cpf,
         },
         externalReference: orderRef,
+        isTest,
       });
 
       setPixData({
@@ -623,11 +608,13 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
         shippingFee,
         shippingDistanceKm,
         originCep: '64099-000',
-        total,
+        total: chargeAmount,
         paymentMethod: 'pix',
         paymentStatus: 'pendente',
         paymentId: res.payment_id,
-        paymentDetail: 'Aguardando pagamento via PIX Mercado Pago',
+        paymentDetail: isTest 
+          ? 'Aguardando PIX de Teste (R$ 0,01) no Mercado Pago' 
+          : 'Aguardando pagamento via PIX Mercado Pago',
         patient: { ...patient },
         schedule: {
           date: selectedDate?.label || 'Amanhã',
@@ -642,7 +629,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
         },
       });
 
-      showToast('Código PIX gerado via Mercado Pago com a visita agendada!', 'success');
+      showToast(isTest ? 'Cobrança de teste de R$ 0,01 gerada via Mercado Pago!' : 'Código PIX gerado via Mercado Pago com a visita agendada!', 'success');
     } catch (err: any) {
       showToast(err.message || 'Erro ao gerar PIX.', 'error');
     } finally {
@@ -782,29 +769,97 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
     showToast('Pagamento Confirmado no Mercado Pago! Resumo enviado por e-mail.', 'success');
   };
 
+  // Polling hook monitoring transaction status via Mercado Pago API
+  const isQrVisible = currentStep === 3 && paymentMethod === 'pix' && Boolean(pixData?.qrCode);
+
+  const {
+    status: paymentPollingStatus,
+    isApproved: isPixConfirmed,
+    isPolling: isPollingStatus,
+    isManualChecking: isVerifyingPix,
+    lastCheckedAt,
+    statusMessage: pollingStatusMessage,
+    checkPaymentNow,
+  } = usePaymentPolling({
+    paymentId: pixData?.paymentId || null,
+    orderRef: currentOrderRef || null,
+    amount: total,
+    isQrVisible,
+    intervalMs: 3000,
+    isTest: isTestPixMode,
+    onPaymentApproved: ({ id, message }) => {
+      handlePaymentApproved('pix', id, message || 'PIX aprovado via Mercado Pago');
+    },
+  });
+
   const handleVerifyPixPayment = async (silent: boolean = false) => {
-    if (!pixData?.paymentId) return;
-    if (!silent) setIsVerifyingPix(true);
     try {
-      const res = await api.checkPaymentStatus(pixData.paymentId);
-      if (res.is_approved || res.status === 'approved' || res.status === 'accredited') {
+      const res = await checkPaymentNow(silent);
+      if (res.isApproved) {
         showToast('Pagamento PIX confirmado com sucesso no Mercado Pago!', 'success');
-        setLastCheckMessage('Pagamento Aprovado!');
-        await handlePaymentApproved('pix', pixData.paymentId, 'PIX compensado e aprovado no Mercado Pago');
-      } else {
-        const msg = 'Pagamento ainda não identificado no Mercado Pago. O PIX pode levar alguns segundos para compensar. Realize o pagamento pelo app do seu banco e clique em verificar novamente.';
-        setLastCheckMessage('Aguardando compensação no banco...');
-        if (!silent) {
-          showToast(msg, 'info');
-        }
+      } else if (!silent) {
+        showToast(
+          'Pagamento ainda não identificado no Mercado Pago. O PIX pode levar alguns segundos para compensar. Realize o pagamento pelo app do seu banco e clique em verificar novamente.',
+          'info'
+        );
       }
     } catch {
       if (!silent) {
         showToast('Não foi possível consultar o Mercado Pago agora. Tente novamente em instantes.', 'error');
       }
-    } finally {
-      if (!silent) setIsVerifyingPix(false);
     }
+  };
+
+  // Explicitly verify direct bank transfers to Werica's key (PSP_TRANSFER)
+  const handleVerifyDirectTransfer = async () => {
+    setIsVerifyingDirectTransfer(true);
+    try {
+      const res = await api.verifyIncomingTransfer({
+        orderRef: currentOrderRef || '',
+        amount: isTestPixMode ? 0.01 : total,
+        allowTest: isTestPixMode || total <= 1,
+      });
+
+      if (res.verified) {
+        showToast(res.message || 'Transferência localizada e confirmada no Mercado Pago!', 'success');
+        await handlePaymentApproved('pix', res.payment_id, 'Transferência bancária aprovada no Mercado Pago');
+      } else {
+        showToast(res.message || 'Transferência ainda não identificada na conta Mercado Pago.', 'info');
+      }
+    } catch {
+      showToast('Erro ao consultar Mercado Pago. Tente novamente em instantes.', 'error');
+    } finally {
+      setIsVerifyingDirectTransfer(false);
+    }
+  };
+
+  // Open WhatsApp for direct transfer proof without bypassing the checkout requirement
+  const handleOpenReceiptWhatsApp = () => {
+    const orderRef = currentOrderRef || `VIT-${Math.floor(10000 + Math.random() * 90000)}`;
+    if (!currentOrderRef) setCurrentOrderRef(orderRef);
+    sendReceiptWhatsAppToAdmin(orderRef);
+    showToast('Abrindo WhatsApp para você anexar seu comprovante à Dra. Werica Reis.', 'info');
+  };
+
+  // Open WhatsApp with pre-filled message asking admin to verify attached receipt
+  const sendReceiptWhatsAppToAdmin = (orderRef: string) => {
+    const adminPhone = CLINIC_CONFIG.phone || '558694484292';
+    const text = [
+      `🌟 *COMPROVANTE DE PAGAMENTO PIX — VITALE CONCIERGE* 🌟`,
+      `*Pedido:* #${orderRef}`,
+      `*Status:* AGUARDANDO CONFERÊNCIA DE COMPROVANTE ⏳`,
+      ``,
+      `Olá Dra. Werica Reis! Realizei a transferência PIX para sua chave aleatória referente ao meu agendamento.`,
+      ``,
+      `👤 *Paciente:* ${patient.name || completedOrder?.patient?.name || 'Cliente'}`,
+      `📅 *Data e Horário:* ${selectedDate?.label || completedOrder?.schedule?.date || 'A combinar'} às ${selectedTime || completedOrder?.schedule?.time || '10:30'}`,
+      `💰 *Valor Transferido:* ${formatCurrency(isTestPixMode ? 0.01 : (total || completedOrder?.total || 0))}`,
+      ``,
+      `📎 _Estou anexando o comprovante bancário (PDF ou foto) a seguir nesta conversa para conferência e confirmação definitiva da maleta e rota._`
+    ].join('\n');
+
+    const url = `https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
   };
 
   const copyPixCode = () => {
@@ -829,9 +884,13 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
     const subtotalVal = subtotal || completedOrder?.subtotal || 0;
     const discountVal = discount || completedOrder?.discount || 0;
     const shippingVal = shippingFee || completedOrder?.shippingFee || 0;
-    const totalVal = total || completedOrder?.total || 0;
+    const totalVal = (isTestPixMode && paymentMethod === 'pix') ? 0.01 : (total || completedOrder?.total || 0);
     const payMethodStr = paymentMethod === 'pix' ? 'PIX Mercado Pago' : 'Cartão de Crédito';
-    const statusStr = isCompleted ? 'CONFIRMADO / PAGO 🎉' : 'AGUARDANDO PAGAMENTO ⏳';
+    const statusStr = isCompleted 
+      ? (completedOrder?.paymentStatus === 'pendente' 
+          ? 'AGENDAMENTO PRÉ-RESERVADO (AGUARDANDO COMPROVANTE) ⏳' 
+          : 'CONFIRMADO / PAGO 🎉') 
+      : 'AGUARDANDO PAGAMENTO ⏳';
 
     const lines = [
       `🌟 *RESUMO DO PEDIDO — VITALE CONCIERGE* 🌟`,
@@ -1749,8 +1808,29 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
               {/* PIX CONTAINER */}
               {paymentMethod === 'pix' && (
                 <div className="p-5 rounded-2xl bg-onyx-900 border border-white/10 text-center space-y-4">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold">
-                    <Sparkles className="w-3.5 h-3.5" /> Rota em Teresina confirmada após a compensação
+                  
+                  {/* Top Bar: Guarantee Badge + Test Mode Toggle */}
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-onyx-950 border border-gold-500/20 text-xs">
+                    <div className="flex items-center gap-1.5 text-left min-w-0">
+                      <Sparkles className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                      <span className="text-neutral-300 font-semibold truncate text-[11px]">
+                        {isTestPixMode 
+                          ? 'Modo de Teste Ativo (R$ 0,01)' 
+                          : `Total da Visita: ${formatCurrency(total)}`}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !isTestPixMode;
+                        setIsTestPixMode(next);
+                        generatePixPayment(currentOrderRef || undefined, next);
+                      }}
+                      className="shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all text-gold-400 hover:text-onyx-950 bg-gold-500/10 hover:bg-gold-500 border-gold-500/40 cursor-pointer"
+                    >
+                      {isTestPixMode ? 'Voltar ao Valor Total' : '🧪 Testar com R$ 0,01'}
+                    </button>
                   </div>
 
                   {isPixGenerating ? (
@@ -1775,20 +1855,20 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                           <span>Expira em:</span>
                           <span className="font-bold text-gold-400 font-mono text-sm">{timerDisplay}</span>
                           {isPollingStatus && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-neutral-400 ml-1">
-                              • <RefreshCw className="w-3 h-3 text-gold-400 animate-spin" /> Verificando
+                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 ml-1">
+                              • <RefreshCw className="w-3 h-3 text-emerald-400 animate-spin" /> Monitorando compensação
                             </span>
                           )}
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => generatePixPayment(currentOrderRef || undefined)}
+                          onClick={() => generatePixPayment(currentOrderRef || undefined, isTestPixMode)}
                           disabled={isPixGenerating}
-                          className="inline-flex items-center gap-1 text-[11px] text-gold-400 hover:text-gold-300 font-semibold px-2.5 py-1 rounded-lg bg-onyx-800 hover:bg-onyx-750 border border-gold-500/20 transition-all"
+                          className="inline-flex items-center gap-1 text-[11px] text-gold-400 hover:text-gold-300 font-semibold px-2.5 py-1 rounded-lg bg-onyx-800 hover:bg-onyx-750 border border-gold-500/20 transition-all cursor-pointer"
                         >
                           <RotateCw className={`w-3 h-3 ${isPixGenerating ? 'animate-spin' : ''}`} />
-                          <span>Gerar Novo QR Code</span>
+                          <span>Gerar Novo QR</span>
                         </button>
                       </div>
 
@@ -1798,10 +1878,10 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                           href={pixData.ticketUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full py-3 px-4 rounded-xl bg-[#009EE3]/20 hover:bg-[#009EE3]/30 border border-[#009EE3]/50 text-[#009EE3] hover:text-cyan-200 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md group"
+                          className="w-full py-2.5 px-4 rounded-xl bg-[#009EE3]/20 hover:bg-[#009EE3]/30 border border-[#009EE3]/50 text-[#009EE3] hover:text-cyan-200 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md group"
                         >
                           <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                          <span>Pagar na Página Oficial do Mercado Pago (Fatura Web)</span>
+                          <span>Abrir Fatura Oficial Web no Mercado Pago</span>
                         </a>
                       )}
 
@@ -1827,84 +1907,141 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                         </div>
                       </div>
 
-                      {/* Direct Random Key Option */}
-                      <div className="p-3 rounded-xl bg-onyx-950 border border-white/10 flex items-center justify-between gap-3 text-left">
-                        <div className="min-w-0">
-                          <span className="text-[10px] uppercase font-bold text-neutral-400 block">
-                            Chave PIX Aleatória (Mercado Pago):
-                          </span>
-                          <span className="font-mono text-gold-400 text-xs truncate block font-bold">
-                            8b9ce82f-9368-47d5-a527-f209f79d2087
-                          </span>
-                          <span className="text-[10px] text-neutral-400 block mt-0.5">
-                            Beneficiária: <strong>Werica Reis Sousa</strong> • Mercado Pago • Teresina - PI
-                          </span>
+                      {/* Direct Random Key Option with Real Verification & WhatsApp Proof */}
+                      <div className="p-3.5 rounded-xl bg-onyx-950 border border-white/10 text-left space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="text-[10px] uppercase font-bold text-neutral-400 block">
+                              Chave PIX Aleatória (Mercado Pago):
+                            </span>
+                            <span className="font-mono text-gold-400 text-xs truncate block font-bold">
+                              8b9ce82f-9368-47d5-a527-f209f79d2087
+                            </span>
+                            <span className="text-[10px] text-neutral-400 block mt-0.5">
+                              Beneficiária: <strong>Werica Reis Sousa</strong> • Mercado Pago • Teresina - PI
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText('8b9ce82f-9368-47d5-a527-f209f79d2087');
+                              showToast('Chave Aleatória do Mercado Pago copiada!', 'success');
+                            }}
+                            className="shrink-0 px-3 py-1.5 rounded-lg bg-onyx-850 hover:bg-gold-500 hover:text-onyx-950 text-gold-400 border border-gold-500/30 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+                          >
+                            <Copy className="w-3.5 h-3.5" /> Copiar
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText('8b9ce82f-9368-47d5-a527-f209f79d2087');
-                            showToast('Chave Aleatória do Mercado Pago copiada!', 'success');
-                          }}
-                          className="shrink-0 px-3 py-1.5 rounded-lg bg-onyx-850 hover:bg-gold-500 hover:text-onyx-950 text-gold-400 border border-gold-500/30 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
-                        >
-                          <Copy className="w-3.5 h-3.5" /> Copiar Chave
-                        </button>
+
+                        {/* Direct key helper actions */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-white/5">
+                          <button
+                            type="button"
+                            onClick={handleVerifyDirectTransfer}
+                            disabled={isVerifyingDirectTransfer}
+                            className="py-2 px-2.5 rounded-lg bg-gold-500/15 hover:bg-gold-500/25 border border-gold-500/30 text-gold-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isVerifyingDirectTransfer ? 'animate-spin' : ''}`} />
+                            <span>Verificar Transferência na Conta</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleOpenReceiptWhatsApp}
+                            className="py-2 px-2.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>Enviar Comprovante (WhatsApp)</span>
+                          </button>
+                        </div>
                       </div>
 
                       {/* Real-time Payment Status & Instructions */}
                       <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-left text-[11px] text-amber-200/90 space-y-1.5 leading-relaxed">
                         <div className="flex items-center gap-1.5 font-bold text-amber-300">
                           <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                          <span>Confirmação e Liberação do Agendamento:</span>
+                          <span>Confirmação Segura e Bloqueio de Fraudes:</span>
                         </div>
                         <p>
-                          • <strong>Verificação Automática:</strong> O sistema consulta o Mercado Pago a cada 3 segundos. Assim que o pagamento for concluído no app do seu banco, a próxima página com o comprovante do agendamento será liberada automaticamente.
+                          • <strong>Compensação Automática via Polling:</strong> O sistema monitora a compensação bancária no Mercado Pago a cada 3 segundos. O botão de finalizar permanece bloqueado até a confirmação real do crédito.
                         </p>
                         <p>
-                          • <strong>Verificação Manual:</strong> Você pode clicar a qualquer momento no botão dourado <em>"Verificar Pagamento no Banco"</em> abaixo para forçar a verificação imediata da compensação.
-                        </p>
-                        <p>
-                          • <strong>Atenção BACEN:</strong> Se o app do banco recusar a leitura por auto-transferência (mesmo titular da conta de destino), realize o pagamento através de outra instituição bancária (ex: Nubank, Itaú, Bradesco, Inter, BB) ou abra a <em>Página Oficial do Mercado Pago</em>.
+                          • <strong>Liberação Instantânea:</strong> Assim que o pagamento for registrado no Mercado Pago ou recebido via Webhook, o botão é desbloqueado e o agendamento é concluído automaticamente.
                         </p>
                       </div>
 
                       {/* Real Payment Verification & WhatsApp Buttons */}
                       <div className="pt-2 border-t border-white/5 space-y-2.5">
+                        {/* Botão de Finalizar Agendamento com Trava Anti-Fraude */}
                         <button
                           type="button"
-                          onClick={() => handleVerifyPixPayment(false)}
-                          disabled={isVerifyingPix}
-                          className="w-full py-3.5 rounded-xl gold-gradient-bg text-onyx-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                          disabled={!isPixConfirmed}
+                          onClick={() => {
+                            if (isPixConfirmed) {
+                              handlePaymentApproved('pix', pixData?.paymentId, 'PIX confirmado com sucesso no Mercado Pago');
+                            }
+                          }}
+                          className={`w-full py-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl ${
+                            isPixConfirmed
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:brightness-110 active:scale-95 cursor-pointer shadow-emerald-500/25 ring-2 ring-emerald-400/50'
+                              : 'bg-neutral-800/90 text-neutral-400 border border-neutral-700/80 cursor-not-allowed opacity-75'
+                          }`}
                         >
-                          {isVerifyingPix ? (
+                          {isPixConfirmed ? (
                             <>
-                              <Loader2 className="w-4 h-4 animate-spin text-onyx-950" />
-                              <span>Consultando Mercado Pago...</span>
+                              <CheckCircle2 className="w-4 h-4 text-white" />
+                              <span>Finalizar Agendamento (Pagamento Confirmado!)</span>
                             </>
                           ) : (
                             <>
-                              <RefreshCw className="w-4 h-4 text-onyx-950" />
-                              <span>Verificar Pagamento no Banco</span>
+                              <Lock className="w-4 h-4 text-amber-400" />
+                              <span>Finalizar Agendamento (Bloqueado — Aguardando PIX)</span>
                             </>
                           )}
                         </button>
 
-                        <div className="flex items-center justify-center gap-2 text-[11px] text-neutral-400 py-0.5">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        {/* Monitoramento em Tempo Real */}
+                        <div className="flex items-center justify-center gap-2 text-[11px] text-neutral-300 py-1.5 bg-black/30 rounded-xl px-3 border border-white/5">
+                          <span className="relative flex h-2.5 w-2.5">
+                            {isPixConfirmed ? (
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            ) : (
+                              <>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                              </>
+                            )}
                           </span>
-                          <span>{lastCheckMessage || 'Monitorando compensação do PIX no banco a cada 3s...'}</span>
+                          <span className="font-medium text-center">{pollingStatusMessage}</span>
                         </div>
+
+                        {/* Botão Manual de Checagem */}
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyPixPayment(false)}
+                          disabled={isVerifyingPix || isPixConfirmed}
+                          className="w-full py-3 rounded-xl bg-onyx-800 hover:bg-onyx-750 border border-gold-500/30 text-gold-300 font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {isVerifyingPix ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-gold-400" />
+                              <span>Consultando Mercado Pago...</span>
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="w-4 h-4 text-gold-400" />
+                              <span>Checar Compensação no Banco Agora</span>
+                            </>
+                          )}
+                        </button>
 
                         <button
                           type="button"
                           onClick={() => sendOrderSummaryToAdminWhatsApp(currentOrderRef || undefined, false)}
-                          className="w-full py-3 px-4 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                          className="w-full py-2.5 px-4 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
                           <MessageCircle className="w-4 h-4 text-emerald-400" />
-                          <span>Enviar Resumo ao Administrador via WhatsApp ({CLINIC_CONFIG.displayPhone})</span>
+                          <span>Dúvidas com o PIX? Falar com Dra. Werica no WhatsApp ({CLINIC_CONFIG.displayPhone})</span>
                         </button>
                       </div>
                     </>
@@ -2059,32 +2196,51 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
               <div id="printReceiptArea" className="space-y-6">
                 {/* Status Header */}
                 <div className="text-center space-y-2">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-lg">
-                    <Check className="w-8 h-8" />
-                  </div>
-                  <span className="text-xs font-bold tracking-widest text-emerald-400 uppercase">
-                    Atendimento Confirmado em Teresina - PI
+                  {completedOrder.paymentStatus === 'pendente' ? (
+                    <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto shadow-lg">
+                      <Clock className="w-8 h-8" />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-lg">
+                      <Check className="w-8 h-8" />
+                    </div>
+                  )}
+
+                  <span className={`text-xs font-bold tracking-widest uppercase ${
+                    completedOrder.paymentStatus === 'pendente' ? 'text-amber-400' : 'text-emerald-400'
+                  }`}>
+                    {completedOrder.paymentStatus === 'pendente'
+                      ? 'Agendamento Pré-Reservado — Pendente de Conferência'
+                      : 'Atendimento Confirmado e Pago no Mercado Pago'}
                   </span>
+                  
                   <h3 className="font-serif text-2xl text-white font-normal">
-                    Sua Visita foi Agendada com Sucesso!
+                    {completedOrder.paymentStatus === 'pendente'
+                      ? 'Sua Vaga foi Pré-Reservada com Sucesso!'
+                      : 'Sua Visita foi Agendada com Sucesso!'}
                   </h3>
-                  <p className="text-xs text-neutral-400">
-                    A maca portátil climatizada e o kit descartável estéril estão confirmados na rota.
+                  
+                  <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+                    {completedOrder.paymentStatus === 'pendente'
+                      ? 'Sua data e horário foram pré-bloqueados. Para liberação definitiva da maleta cirúrgica e confirmação da rota pela Dra. Werica Reis, envie o comprovante PIX no WhatsApp.'
+                      : 'A maca portátil climatizada e o kit descartável estéril estão confirmados na rota.'}
                   </p>
                   
                   <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
                     <div className="px-4 py-1.5 rounded-xl bg-onyx-900 border border-gold-500/30 text-gold-300 font-mono text-sm font-bold tracking-wider">
                       Código: #{completedOrder.id}
                     </div>
-                    <button
-                      type="button"
-                      onClick={triggerCelebration}
-                      className="px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-gold-400 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                      title="Soltar confetes de comemoração"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-                      <span>Comemorar 🎉</span>
-                    </button>
+                    {completedOrder.paymentStatus === 'aprovado' && (
+                      <button
+                        type="button"
+                        onClick={triggerCelebration}
+                        className="px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-gold-400 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Soltar confetes de comemoração"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+                        <span>Comemorar 🎉</span>
+                      </button>
+                    )}
                   </div>
 
                   <div className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 mt-1">
@@ -2093,34 +2249,66 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                   </div>
                 </div>
 
-                {/* UNLOCKED WHATSAPP VIP CALLOUT (ONLY UNLOCKED AFTER PAYMENT) */}
-                <div className="p-5 rounded-2xl bg-gradient-to-b from-onyx-900 via-onyx-850 to-onyx-900 border-2 border-gold-500 shadow-2xl relative overflow-hidden animate-pulse-subtle">
+                {/* WHATSAPP ACTION CALLOUT */}
+                <div className={`p-5 rounded-2xl bg-gradient-to-b from-onyx-900 via-onyx-850 to-onyx-900 border-2 ${
+                  completedOrder.paymentStatus === 'pendente' ? 'border-amber-500/60' : 'border-gold-500'
+                } shadow-2xl relative overflow-hidden`}>
                   <div className="absolute -right-6 -top-6 w-28 h-28 bg-gold-500/10 rounded-full blur-xl pointer-events-none" />
 
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                    <div className={`w-10 h-10 rounded-full ${
+                      completedOrder.paymentStatus === 'pendente' 
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    } flex items-center justify-center shrink-0`}>
                       <MessageCircle className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gold-400 uppercase tracking-wider">Suporte Teresina Liberado</span>
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-bold">Desbloqueado</span>
+                        <span className="text-xs font-bold text-gold-400 uppercase tracking-wider">
+                          {completedOrder.paymentStatus === 'pendente' ? 'Ação Requerida' : 'Suporte Teresina Liberado'}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          completedOrder.paymentStatus === 'pendente' 
+                            ? 'bg-amber-500/20 text-amber-300' 
+                            : 'bg-emerald-500/20 text-emerald-300'
+                        }`}>
+                          {completedOrder.paymentStatus === 'pendente' ? 'Aguardando Comprovante' : 'Confirmado'}
+                        </span>
                       </div>
-                      <h4 className="text-sm font-bold text-white mt-0.5">Canal Direto com a Equipe Concierge THE</h4>
+                      <h4 className="text-sm font-bold text-white mt-0.5">
+                        {completedOrder.paymentStatus === 'pendente'
+                          ? 'Envie o Comprovante para a Dra. Werica Reis'
+                          : 'Canal Direto com a Equipe Concierge THE'}
+                      </h4>
                       <p className="text-xs text-neutral-300 mt-1">
-                        Use o botão abaixo para enviar os detalhes de acesso (portaria de condomínio, interfone) e receber as orientações pré-procedimento.
+                        {completedOrder.paymentStatus === 'pendente'
+                          ? 'Anexe a foto ou PDF do comprovante no WhatsApp aberto para que a maleta seja separada e a rota confirmada.'
+                          : 'Use o botão abaixo para enviar os detalhes de acesso (portaria de condomínio, interfone) e receber as orientações pré-procedimento.'}
                       </p>
                     </div>
                   </div>
 
-                  {/* WhatsApp CTA to send complete order summary to administrator */}
+                  {/* WhatsApp CTA */}
                   <button
                     type="button"
-                    onClick={() => sendOrderSummaryToAdminWhatsApp(completedOrder.id, true)}
-                    className="w-full mt-3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+                    onClick={() => {
+                      if (completedOrder.paymentStatus === 'pendente') {
+                        sendReceiptWhatsAppToAdmin(completedOrder.id);
+                      } else {
+                        sendOrderSummaryToAdminWhatsApp(completedOrder.id, true);
+                      }
+                    }}
+                    className={`w-full mt-3 py-3.5 px-4 rounded-xl ${
+                      completedOrder.paymentStatus === 'pendente'
+                        ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-onyx-950'
+                        : 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white'
+                    } font-bold text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2.5 transition-all cursor-pointer`}
                   >
                     <MessageCircle className="w-4 h-4" />
-                    Enviar Resumo do Pedido ao Administrador no WhatsApp ({CLINIC_CONFIG.displayPhone})
+                    {completedOrder.paymentStatus === 'pendente'
+                      ? `Enviar Comprovante no WhatsApp (${CLINIC_CONFIG.displayPhone})`
+                      : `Enviar Resumo do Pedido ao Administrador no WhatsApp (${CLINIC_CONFIG.displayPhone})`}
                   </button>
                 </div>
 
@@ -2167,7 +2355,9 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                     </div>
                   )}
                   <div className="flex justify-between pt-1 font-bold text-sm">
-                    <span className="text-white">Total Pago (Mercado Pago):</span>
+                    <span className="text-white">
+                      {completedOrder.paymentStatus === 'pendente' ? 'Total do Agendamento (Pendente):' : 'Total Pago (Mercado Pago):'}
+                    </span>
                     <span className="text-gold-400">{formatCurrency(completedOrder.total)}</span>
                   </div>
                 </div>
@@ -2246,6 +2436,35 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
                 >
                   <span>Ir para Pagamento Mercado Pago</span>
                   <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+
+              {currentStep === 3 && paymentMethod === 'pix' && (
+                <button
+                  type="button"
+                  disabled={!isPixConfirmed}
+                  onClick={() => {
+                    if (isPixConfirmed) {
+                      handlePaymentApproved('pix', pixData?.paymentId, 'PIX confirmado com sucesso no Mercado Pago');
+                    }
+                  }}
+                  className={`px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg ${
+                    isPixConfirmed
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:brightness-110 active:scale-95 cursor-pointer shadow-emerald-500/30 ring-2 ring-emerald-400/40'
+                      : 'bg-neutral-800 text-neutral-400 border border-neutral-700/80 cursor-not-allowed opacity-60'
+                  }`}
+                >
+                  {isPixConfirmed ? (
+                    <>
+                      <span>Finalizar Agendamento</span>
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Finalizar (Aguardando PIX)</span>
+                    </>
+                  )}
                 </button>
               )}
             </div>
